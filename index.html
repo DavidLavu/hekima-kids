@@ -15,7 +15,9 @@ body {
   background: #fdf8ec;
   color: #3a3226;
   font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -41,11 +43,13 @@ h1 { font-size: 22px; margin: 0; font-weight: 700; color: #5a4a2f; }
   cursor: pointer;
 }
 #hdrBtns { display: flex; gap: 6px; flex-wrap: wrap; }
-main { max-width: 560px; width: 100%; margin: 0 auto; padding: 6px 18px 0; flex: 1; }
-.ygroup { margin: 6px 0 2px; }
-.ylabel { font-size: 12px; font-weight: 700; color: #a08f6e; text-transform: uppercase; letter-spacing: 0.06em; margin: 4px 2px; }
-.chips { display: flex; flex-wrap: wrap; gap: 7px; }
+main { max-width: 560px; width: 100%; margin: 0 auto; padding: 4px 18px 0; flex: 1; min-height: 0; overflow-y: auto; }
+.ygroup { display: flex; align-items: center; gap: 6px; margin: 3px 0 0; }
+.ylabel { flex: 0 0 36px; font-size: 11px; font-weight: 700; color: #a08f6e; text-transform: uppercase; letter-spacing: 0.04em; text-align: center; line-height: 1.15; }
+.chips { display: flex; flex-wrap: nowrap; gap: 7px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 3px 2px; flex: 1; }
+.chips::-webkit-scrollbar { display: none; }
 .mode-btn {
+  flex: 0 0 auto;
   font-size: 14px;
   padding: 9px 13px;
   border: 2px solid #d8cdb4;
@@ -57,19 +61,20 @@ main { max-width: 560px; width: 100%; margin: 0 auto; padding: 6px 18px 0; flex:
   align-items: center;
   gap: 6px;
 }
+.mode-btn .ic { font-size: 17px; line-height: 1; }
 .mode-btn.y3 { border-color: #e3c87e; }
 .mode-btn.on { background: #4a7ba6; border-color: #4a7ba6; color: #fff; }
 .mode-btn .dot { width: 9px; height: 9px; border-radius: 50%; background: #e4dcc8; display: inline-block; }
-#stars { display: flex; gap: 7px; justify-content: center; margin: 10px 0 6px; }
-.star { width: 22px; height: 22px; }
-#qcount { text-align: center; font-size: 14px; color: #a08f6e; margin: 0 0 2px; min-height: 18px; }
+#stars { display: flex; gap: 7px; justify-content: center; margin: clamp(4px, 1.2vh, 10px) 0 4px; }
+.star { width: clamp(15px, 2.4vh, 22px); height: clamp(15px, 2.4vh, 22px); }
+#qcount { text-align: center; font-size: 13px; color: #a08f6e; margin: 0 0 2px; min-height: 16px; }
 #picture { display: flex; justify-content: center; margin: 4px 0; min-height: 0; cursor: pointer; }
-#question { text-align: center; font-size: 52px; font-weight: 700; margin: 4px 0 16px; min-height: 62px; cursor: pointer; }
-#answers { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
+#question { text-align: center; font-size: clamp(32px, 6.4vh, 52px); font-weight: 700; margin: 2px 0 clamp(6px, 1.6vh, 16px); min-height: clamp(40px, 7.5vh, 62px); cursor: pointer; }
+#answers { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: clamp(9px, 1.6vh, 14px); }
 .ans-btn {
-  font-size: 32px;
+  font-size: clamp(22px, 4vh, 32px);
   font-weight: 700;
-  padding: 22px 0;
+  padding: clamp(11px, 2.6vh, 22px) 0;
   border: 2px solid #d8cdb4;
   border-radius: 18px;
   background: #fff;
@@ -80,7 +85,7 @@ main { max-width: 560px; width: 100%; margin: 0 auto; padding: 6px 18px 0; flex:
 .ans-btn.good { background: #e2f2e6; border-color: #3b8f5a; color: #2c6b44; }
 .ans-btn.bad { background: #f9e3e0; border-color: #b34a37; color: #8f3a2b; }
 .ans-btn.wide { grid-column: 1 / -1; font-size: 22px; padding: 16px 0; }
-#msg { text-align: center; font-size: 18px; min-height: 30px; margin: 12px 0 4px; color: #5a4a2f; font-weight: 600; }
+#msg { text-align: center; font-size: clamp(14px, 2.2vh, 18px); min-height: 26px; margin: clamp(6px, 1.4vh, 12px) 0 2px; color: #5a4a2f; font-weight: 600; }
 .endmsg { grid-column: 1 / -1; text-align: center; font-size: 19px; font-weight: 600; color: #3a3226; margin: 2px 0; }
 .endsummary { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 .endsummary .mini { text-align: center; font-size: 11px; color: #5a4a2f; width: 74px; }
@@ -92,12 +97,12 @@ footer {
   max-width: 560px;
   width: 100%;
   margin: 0 auto;
-  padding: 4px 18px 6px;
-  font-size: 13px;
+  padding: 2px 18px 4px;
+  font-size: 12px;
   color: #a08f6e;
 }
 footer a { color: #a08f6e; text-decoration: underline; cursor: pointer; }
-#meadow { display: block; width: 100%; margin-top: auto; }
+#meadow { display: block; width: 100%; margin-top: auto; flex: 0 0 auto; height: clamp(90px, 18vh, 200px); }
 
 /* wings */
 .wl, .wr { transform-box: fill-box; transform-origin: left center; }
@@ -186,9 +191,29 @@ table.stats th { color: #a08f6e; font-weight: 600; font-size: 12px; }
   <span id="totalCaught"></span>
   <a id="grownLink">Grown-ups</a>
 </footer>
-<svg id="meadow" viewBox="0 0 680 170" role="img" aria-label="A meadow that fills with butterflies as you answer correctly">
+<svg id="meadow" viewBox="0 0 680 170" preserveAspectRatio="xMidYMax slice" role="img" aria-label="A meadow that fills with butterflies as you answer correctly">
+  <g transform="translate(622 30)">
+    <path d="M-28 0 H-36 M28 0 H36 M0 -28 V-36 M0 28 V36 M-20 -20 L-26 -26 M20 20 L26 26 M-20 20 L-26 26 M20 -20 L26 -26" stroke="#f3cf63" stroke-width="4" stroke-linecap="round"/>
+    <circle r="19" fill="#f7d154"/>
+  </g>
+  <g fill="#f6f1e2">
+    <ellipse cx="150" cy="30" rx="36" ry="13"/><ellipse cx="174" cy="21" rx="23" ry="10"/><ellipse cx="126" cy="23" rx="19" ry="9"/>
+    <ellipse cx="420" cy="22" rx="28" ry="10"/><ellipse cx="440" cy="15" rx="17" ry="8"/>
+  </g>
   <path d="M0 100 C 120 78 240 110 360 96 C 480 84 580 106 680 92 L680 170 L0 170 Z" fill="#7fb163"/>
   <path d="M0 128 C 150 112 300 138 460 124 C 560 115 620 128 680 120 L680 170 L0 170 Z" fill="#6a9c52"/>
+  <g stroke="#4e7d3c" stroke-width="3" fill="none" stroke-linecap="round">
+    <path d="M60 132 C 58 122 62 114 60 108"/>
+    <path d="M210 128 C 212 116 208 106 210 98"/>
+    <path d="M480 130 C 478 120 482 112 480 108"/>
+    <path d="M640 136 C 642 128 638 120 640 114"/>
+  </g>
+  <g>
+    <g transform="translate(60 102)"><circle cx="0" cy="-7" r="6" fill="#e6a4b8"/><circle cx="6.7" cy="-2.2" r="6" fill="#e6a4b8"/><circle cx="4.1" cy="5.7" r="6" fill="#e6a4b8"/><circle cx="-4.1" cy="5.7" r="6" fill="#e6a4b8"/><circle cx="-6.7" cy="-2.2" r="6" fill="#e6a4b8"/><circle r="4.5" fill="#f2c84b"/></g>
+    <g transform="translate(210 92)"><circle cx="0" cy="-7" r="6.5" fill="#e8c84f"/><circle cx="6.7" cy="-2.2" r="6.5" fill="#e8c84f"/><circle cx="4.1" cy="5.7" r="6.5" fill="#e8c84f"/><circle cx="-4.1" cy="5.7" r="6.5" fill="#e8c84f"/><circle cx="-6.7" cy="-2.2" r="6.5" fill="#e8c84f"/><circle r="4.5" fill="#c97b3d"/></g>
+    <g transform="translate(480 102)"><circle cx="0" cy="-7" r="6" fill="#f2e6c9"/><circle cx="6.7" cy="-2.2" r="6" fill="#f2e6c9"/><circle cx="4.1" cy="5.7" r="6" fill="#f2e6c9"/><circle cx="-4.1" cy="5.7" r="6" fill="#f2e6c9"/><circle cx="-6.7" cy="-2.2" r="6" fill="#f2e6c9"/><circle r="4.5" fill="#f2c84b"/></g>
+    <g transform="translate(640 112)"><circle cx="0" cy="-6" r="5" fill="#d4537e"/><circle cx="5.6" cy="-1.8" r="5" fill="#d4537e"/><circle cx="3.4" cy="4.8" r="5" fill="#d4537e"/><circle cx="-3.4" cy="4.8" r="5" fill="#d4537e"/><circle cx="-5.6" cy="-1.8" r="5" fill="#d4537e"/><circle r="3.8" fill="#f2c84b"/></g>
+  </g>
   <circle cx="80" cy="132" r="4" fill="#f2e6c9"/><circle cx="162" cy="142" r="4" fill="#e6a4b8"/>
   <circle cx="300" cy="138" r="4" fill="#e8c84f"/><circle cx="452" cy="134" r="4" fill="#e6a4b8"/>
   <circle cx="560" cy="142" r="4" fill="#f2e6c9"/><circle cx="622" cy="130" r="4" fill="#e8c84f"/>
@@ -684,6 +709,7 @@ function setFooter() {
 }
 
 /* ---------- mode picker ---------- */
+const MODE_ICONS = { x2: "🐞", x5: "⭐", x10: "🌼", add: "🍎", sub: "🍪", div: "🍓", miss: "🕵️", pv: "🐊", frac: "🍰", x3: "🎈", x4: "🍀", x8: "🕷️", add2: "🚀", sub2: "🎢" };
 function buildModes() {
   const groups = { 2: [], 3: [] };
   for (const [id, m] of Object.entries(MODES)) groups[m.year].push([id, m]);
@@ -691,6 +717,7 @@ function buildModes() {
     '<div class="ygroup"><div class="ylabel">' + (y === 2 ? "Year 2" : "Year 3 ✨") + '</div><div class="chips">' +
     groups[y].map(([id, m]) =>
       '<button class="mode-btn' + (id === mode ? " on" : "") + (y === 3 ? " y3" : "") + '" data-m="' + id + '">' +
+      '<span class="ic">' + (MODE_ICONS[id] || "🦋") + '</span>' +
       m.label + '<span class="dot" id="dot-' + id + '"></span></button>').join("") +
     '</div></div>').join("");
   document.querySelectorAll(".mode-btn").forEach(b => {
@@ -702,6 +729,8 @@ function buildModes() {
       restart();
     };
   });
+  const on = document.querySelector(".mode-btn.on");
+  if (on && on.scrollIntoView) on.scrollIntoView({ inline: "center", block: "nearest" });
   updateDots();
 }
 function updateDots() {
@@ -715,10 +744,29 @@ function updateDots() {
 
 /* ---------- catching butterflies ---------- */
 function addToMeadow(spId) {
-  const x = rnd(40, 640), y = rnd(20, 90), s = (0.6 + Math.random() * 0.45).toFixed(2), r = rnd(-25, 25);
-  $("bfield").insertAdjacentHTML("beforeend",
-    '<g transform="translate(' + x + " " + y + ") rotate(" + r + ") scale(" + s + ')">' + bflySVG(SP[spId]) + '</g>');
+  // land on the grass band: stays visible however the meadow is cropped on small/wide screens
+  const x = rnd(120, 560), y = rnd(84, 146), s = (0.6 + Math.random() * 0.45).toFixed(2), r = rnd(-25, 25);
+  const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  g.innerHTML = bflySVG(SP[spId]);
+  g.classList.add("flying");
+  const fromLeft = x < 340;
+  g.style.transform = "translate(" + (fromLeft ? -70 : 750) + "px, " + rnd(-15, 25) + "px) rotate(" + (fromLeft ? 25 : -25) + "deg) scale(" + s + ")";
+  g.style.transition = "transform 1.5s cubic-bezier(.5,.1,.4,1)";
+  $("bfield").appendChild(g);
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    g.style.transform = "translate(" + x + "px, " + y + "px) rotate(" + r + "deg) scale(" + s + ")";
+  }));
+  setTimeout(() => g.classList.remove("flying"), 1600);
 }
+// every few seconds one resting butterfly flutters its wings
+setInterval(() => {
+  const bs = $("bfield").children;
+  if (!bs.length) return;
+  const b = bs[rnd(0, bs.length - 1)];
+  if (b.classList.contains("flying")) return;
+  b.classList.add("flap");
+  setTimeout(() => b.classList.remove("flap"), 2100);
+}, 5000);
 function celebrate(sp) {
   const old = $("flyer");
   if (old) old.remove();
