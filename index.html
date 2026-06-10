@@ -409,7 +409,7 @@ if ("speechSynthesis" in window) {
 function speak(text, opts = {}) {
   if (!S.settings.voice || !("speechSynthesis" in window) || !text) return;
   try {
-    speechSynthesis.cancel();
+    if (!opts.queue) speechSynthesis.cancel(); // queued utterances wait politely for the current one
     const u = new SpeechSynthesisUtterance(text);
     if (voiceObj) { u.voice = voiceObj; u.lang = voiceObj.lang; }
     else u.lang = "en-GB";
@@ -767,7 +767,7 @@ function vary(key, arr) {
   return v;
 }
 let mode = "x2", qnum = 0, score = 0, locked = false, q = null;
-let roundNew = [], roundIds = [], promptT = null;
+let roundNew = [], roundIds = [], promptT = null, lastGood = null;
 
 /* ---------- stars & footer ---------- */
 function starSVG(filled) {
@@ -939,8 +939,22 @@ function next() {
     $("answers").innerHTML = q.options.map(v => '<button class="ans-btn" data-v="' + v + '">' + v + "</button>").join("");
     document.querySelectorAll(".ans-btn").forEach(btn => { btn.onclick = () => pick(btn); });
   }
-  speak(q.say);
+  speak(questionLead() + q.say, { queue: qnum > 0 });
   armNudge();
+}
+// a short encouraging bridge before each question is read out
+function questionLead() {
+  if (qnum === 0) return vary("lead0", ["Here we go! ", "Off we go — butterfly time! ", "Let's catch some butterflies! "]);
+  if (qnum === TOTAL - 1) return vary("leadLast", ["The very last one — make it shine! ", "One more for a full meadow! ", "Last question — you can do it! "]);
+  if (qnum === TOTAL / 2) return "Halfway there already" + nameBit() + " — wonderful flying! ";
+  if (lastGood) return vary("leadGood", [
+    "You're on a roll! ", "Let's catch another one! ", "Ready for the next one? ",
+    "Another butterfly is waiting! ", "You're doing so well — next one! ", "Keep it up! "
+  ]);
+  return vary("leadBad", [
+    "You've got this one! ", "Here's a fresh one for you! ",
+    "A new one — you can do it! ", "Take a deep breath — here we go! "
+  ]);
 }
 function armNudge() {
   clearTimeout(promptT);
@@ -1054,6 +1068,7 @@ function pick(btn) {
 }
 function resolveGood() {
   const st = topicStat(mode);
+  lastGood = true;
   {
     score++;
     st.correct++;
@@ -1094,6 +1109,7 @@ function resolveGood() {
 }
 function resolveBad(custom) {
   const st = topicStat(mode);
+  lastGood = false;
   st.missed[q.key] = { p: q.p, t: q.text, n: ((st.missed[q.key] || {}).n || 0) + 1 };
   if (custom) {
     $("msg").textContent = custom.text;
