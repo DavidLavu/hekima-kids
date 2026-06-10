@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Butterflies">
+<link rel="apple-touch-icon" href="icon.png">
+<title>Butterfly maths</title>
+<style>
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  margin: 0;
+  background: #fdf8ec;
+  color: #3a3226;
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 12px 18px 0;
+  max-width: 680px;
+  width: 100%;
+  margin: 0 auto;
+}
+h1 { font-size: 22px; margin: 0; font-weight: 700; color: #5a4a2f; }
+.hdr-btn {
+  font-size: 13px;
+  padding: 7px 12px;
+  border: 2px solid #d8cdb4;
+  border-radius: 999px;
+  background: #fff;
+  color: #5a4a2f;
+  cursor: pointer;
+}
+#hdrBtns { display: flex; gap: 6px; flex-wrap: wrap; }
+main { max-width: 560px; width: 100%; margin: 0 auto; padding: 6px 18px 0; flex: 1; }
+.ygroup { margin: 6px 0 2px; }
+.ylabel { font-size: 12px; font-weight: 700; color: #a08f6e; text-transform: uppercase; letter-spacing: 0.06em; margin: 4px 2px; }
+.chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.mode-btn {
+  font-size: 14px;
+  padding: 9px 13px;
+  border: 2px solid #d8cdb4;
+  border-radius: 999px;
+  background: #fff;
+  color: #5a4a2f;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.mode-btn.y3 { border-color: #e3c87e; }
+.mode-btn.on { background: #4a7ba6; border-color: #4a7ba6; color: #fff; }
+.mode-btn .dot { width: 9px; height: 9px; border-radius: 50%; background: #e4dcc8; display: inline-block; }
+#stars { display: flex; gap: 7px; justify-content: center; margin: 10px 0 6px; }
+.star { width: 22px; height: 22px; }
+#qcount { text-align: center; font-size: 14px; color: #a08f6e; margin: 0 0 2px; min-height: 18px; }
+#picture { display: flex; justify-content: center; margin: 4px 0; min-height: 0; cursor: pointer; }
+#question { text-align: center; font-size: 52px; font-weight: 700; margin: 4px 0 16px; min-height: 62px; cursor: pointer; }
+#answers { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
+.ans-btn {
+  font-size: 32px;
+  font-weight: 700;
+  padding: 22px 0;
+  border: 2px solid #d8cdb4;
+  border-radius: 18px;
+  background: #fff;
+  color: #3a3226;
+  cursor: pointer;
+}
+.ans-btn:active { transform: scale(0.97); }
+.ans-btn.good { background: #e2f2e6; border-color: #3b8f5a; color: #2c6b44; }
+.ans-btn.bad { background: #f9e3e0; border-color: #b34a37; color: #8f3a2b; }
+.ans-btn.wide { grid-column: 1 / -1; font-size: 22px; padding: 16px 0; }
+#msg { text-align: center; font-size: 18px; min-height: 30px; margin: 12px 0 4px; color: #5a4a2f; font-weight: 600; }
+.endmsg { grid-column: 1 / -1; text-align: center; font-size: 19px; font-weight: 600; color: #3a3226; margin: 2px 0; }
+.endsummary { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.endsummary .mini { text-align: center; font-size: 11px; color: #5a4a2f; width: 74px; }
+.endsummary svg { width: 54px; }
+footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 560px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 4px 18px 6px;
+  font-size: 13px;
+  color: #a08f6e;
+}
+footer a { color: #a08f6e; text-decoration: underline; cursor: pointer; }
+#meadow { display: block; width: 100%; margin-top: auto; }
+
+/* wings */
+.wl, .wr { transform-box: fill-box; transform-origin: left center; }
+.wr { transform: scale(-1, 1); }
+@keyframes flapL { 0%,100% { transform: scaleX(1); } 50% { transform: scaleX(0.25); } }
+@keyframes flapR { 0%,100% { transform: scale(-1,1); } 50% { transform: scale(-0.25,1); } }
+.flap .wl { animation: flapL 0.5s ease-in-out 4; }
+.flap .wr { animation: flapR 0.5s ease-in-out 4; }
+.flying .wl { animation: flapL 0.35s ease-in-out infinite; }
+.flying .wr { animation: flapR 0.35s ease-in-out infinite; }
+
+/* new-species flyer */
+#flyer { position: fixed; left: 0; top: 16%; z-index: 60; pointer-events: none; animation: flyx 4s linear forwards; }
+#flyer .bob { animation: bob 1.2s ease-in-out infinite; display: block; }
+@keyframes flyx { from { transform: translateX(-18vw); } to { transform: translateX(112vw); } }
+@keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-24px); } }
+
+/* overlays */
+.overlay { position: fixed; inset: 0; background: #fdf8ec; overflow-y: auto; z-index: 20; padding: 14px 18px 30px; }
+.overlay.hidden { display: none; }
+.ovl-head { display: flex; justify-content: space-between; align-items: center; max-width: 640px; margin: 0 auto 6px; }
+.ovl-head h2 { margin: 0; font-size: 22px; color: #5a4a2f; }
+.ovl-body { max-width: 640px; margin: 0 auto; }
+#albumTotal { color: #a08f6e; font-size: 14px; margin: 2px 0 12px; }
+#albumGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 10px; }
+.card {
+  background: #fff;
+  border: 2px solid #e4dcc8;
+  border-radius: 14px;
+  padding: 10px 6px 8px;
+  text-align: center;
+  cursor: pointer;
+}
+.card svg { width: 70px; }
+.card .nm { font-size: 13px; font-weight: 700; color: #5a4a2f; margin-top: 2px; }
+.card .ct { font-size: 11px; color: #a08f6e; }
+.card.locked { background: #f4eedd; }
+.card.locked .nm { color: #a08f6e; }
+.card .badge { font-size: 10px; color: #b8860b; font-weight: 700; }
+#meters { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; margin-top: 8px; }
+.meter { text-align: center; font-size: 11px; color: #5a4a2f; }
+.meter svg { width: 52px; }
+h3.sect { font-size: 16px; color: #5a4a2f; margin: 20px 0 6px; }
+/* grown-ups */
+#gate input, #grownName {
+  font-size: 18px; padding: 8px 10px; border: 2px solid #d8cdb4; border-radius: 10px; width: 110px; background: #fff;
+}
+#grownName { width: 200px; }
+#voiceSel { font-size: 15px; padding: 8px 10px; border: 2px solid #d8cdb4; border-radius: 10px; background: #fff; max-width: 280px; }
+#voiceQuick { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 10px; }
+.vq { font-size: 14px; padding: 9px 14px; border: 2px solid #d8cdb4; border-radius: 999px; background: #fff; color: #5a4a2f; cursor: pointer; }
+.vq.on { background: #4a7ba6; border-color: #4a7ba6; color: #fff; }
+.gbtn {
+  font-size: 15px; padding: 9px 16px; border: 2px solid #d8cdb4; border-radius: 999px; background: #fff; color: #5a4a2f; cursor: pointer; margin-left: 6px;
+}
+.gbtn.danger { border-color: #c9847a; color: #8f3a2b; }
+table.stats { border-collapse: collapse; width: 100%; font-size: 14px; }
+table.stats th, table.stats td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #e8e0cc; }
+table.stats th { color: #a08f6e; font-weight: 600; font-size: 12px; }
+.note { font-size: 12px; color: #a08f6e; }
+@media (max-width: 420px) {
+  #question { font-size: 44px; }
+  .ans-btn { font-size: 27px; padding: 18px 0; }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Butterfly maths</h1>
+  <div id="hdrBtns">
+    <button class="hdr-btn" id="albumBtn">🦋 Album</button>
+    <button class="hdr-btn" id="soundBtn" aria-pressed="true">Sound: on</button>
+    <button class="hdr-btn" id="voiceBtn" aria-pressed="true">Voice: on</button>
+  </div>
+</header>
+<main>
+  <div id="modes"></div>
+  <div id="stars"></div>
+  <p id="qcount"></p>
+  <div id="picture" title="Tap to hear the question again"></div>
+  <p id="question" title="Tap to hear the question again"></p>
+  <div id="answers"></div>
+  <p id="msg"></p>
+</main>
+<footer>
+  <span id="totalCaught"></span>
+  <a id="grownLink">Grown-ups</a>
+</footer>
+<svg id="meadow" viewBox="0 0 680 170" role="img" aria-label="A meadow that fills with butterflies as you answer correctly">
+  <path d="M0 100 C 120 78 240 110 360 96 C 480 84 580 106 680 92 L680 170 L0 170 Z" fill="#7fb163"/>
+  <path d="M0 128 C 150 112 300 138 460 124 C 560 115 620 128 680 120 L680 170 L0 170 Z" fill="#6a9c52"/>
+  <circle cx="80" cy="132" r="4" fill="#f2e6c9"/><circle cx="162" cy="142" r="4" fill="#e6a4b8"/>
+  <circle cx="300" cy="138" r="4" fill="#e8c84f"/><circle cx="452" cy="134" r="4" fill="#e6a4b8"/>
+  <circle cx="560" cy="142" r="4" fill="#f2e6c9"/><circle cx="622" cy="130" r="4" fill="#e8c84f"/>
+  <g id="bfield"></g>
+</svg>
+
+<div id="albumPage" class="overlay hidden">
+  <div class="ovl-head">
+    <h2>🦋 Butterfly album</h2>
+    <button class="hdr-btn" id="albumClose">✕ Back to the meadow</button>
+  </div>
+  <div class="ovl-body">
+    <p id="albumTotal"></p>
+    <div id="albumGrid"></div>
+    <h3 class="sect">🌸 Your learning garden</h3>
+    <p class="note">Every flower blooms as you practise. Five right answers grow one petal!</p>
+    <div id="meters"></div>
+  </div>
+</div>
+
+<div id="grownPage" class="overlay hidden">
+  <div class="ovl-head">
+    <h2>Grown-ups</h2>
+    <button class="hdr-btn" id="grownClose">✕ Back</button>
+  </div>
+  <div class="ovl-body">
+    <div id="gate">
+      <p>A quick question to keep little fingers out: <strong>what is 7 × 8?</strong></p>
+      <input type="number" id="gateIn" inputmode="numeric" aria-label="Answer to seven times eight">
+      <button class="gbtn" id="gateBtn">Open</button>
+      <p id="gateMsg" class="note"></p>
+    </div>
+    <div id="grownContent" style="display:none"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ---------- tiny helpers ---------- */
+const $ = id => document.getElementById(id);
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) { const j = rnd(0, i); [arr[i], arr[j]] = [arr[j], arr[i]]; }
+  return arr;
+}
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+/* ---------- numbers to spoken words ---------- */
+const W1 = ["zero","one","two","three","four","five","six","seven","eight","nine","ten","eleven","twelve","thirteen","fourteen","fifteen","sixteen","seventeen","eighteen","nineteen"];
+const W10 = ["","ten","twenty","thirty","forty","fifty","sixty","seventy","eighty","ninety"];
+function words(n) {
+  n = Math.round(n);
+  if (n < 0) return "minus " + words(-n);
+  if (n < 20) return W1[n];
+  if (n < 100) return W10[Math.floor(n / 10)] + (n % 10 ? "-" + W1[n % 10] : "");
+  if (n < 1000) { const h = Math.floor(n / 100), r = n % 100; return W1[h] + " hundred" + (r ? " and " + words(r) : ""); }
+  return "one thousand";
+}
+const SAY_MAP = { "½": "one half", "¼": "one quarter", "⅓": "one third", "¾": "three quarters", "<": "less than", ">": "greater than", "=": "equals" };
+const sayVal = v => SAY_MAP[v] || (isNaN(+v) ? v : words(+v));
+
+/* ---------- state ---------- */
+function defaultState() {
+  return { caught: {}, topics: {}, rounds: 0, bestRound: {}, name: "", legacy: 0,
+           settings: { sound: true, voice: true, voiceName: "", voiceStyle: "" } };
+}
+function loadState() {
+  let s = defaultState();
+  try {
+    const raw = localStorage.getItem("hk_state");
+    if (raw) {
+      const p = JSON.parse(raw);
+      s = Object.assign(s, p);
+      s.settings = Object.assign({ sound: true, voice: true, voiceName: "", voiceStyle: "" }, p.settings || {});
+    }
+  } catch (e) {}
+  // migrate the old simple counter from the first version
+  const old = parseInt(localStorage.getItem("hk_album") || "0");
+  if (old > 0) { s.legacy += old; try { localStorage.removeItem("hk_album"); } catch (e) {} }
+  return s;
+}
+let S = loadState();
+function saveState() { try { localStorage.setItem("hk_state", JSON.stringify(S)); } catch (e) {} }
+function topicStat(m) {
+  if (!S.topics[m]) S.topics[m] = { asked: 0, correct: 0, missed: {} };
+  if (!S.topics[m].missed) S.topics[m].missed = {};
+  return S.topics[m];
+}
+function totalCaught() {
+  return S.legacy + Object.values(S.caught).reduce((a, b) => a + b, 0);
+}
+
+/* ---------- sounds (Web Audio, synthesized) ---------- */
+let actx = null;
+function play(notes) {
+  if (!S.settings.sound) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === "suspended") actx.resume();
+    let t = actx.currentTime;
+    for (const [freq, dur] of notes) {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = "sine";
+      o.frequency.value = freq;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.2, t + 0.015);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g).connect(actx.destination);
+      o.start(t);
+      o.stop(t + dur + 0.05);
+      t += dur * 0.85;
+    }
+  } catch (e) {}
+}
+const sCorrect = () => play([[660, 0.13], [880, 0.22]]);
+const sWrong = () => play([[200, 0.25]]);
+const sTap = () => play([[440, 0.06]]);
+const sFanfare = () => play([[523, 0.14], [659, 0.14], [784, 0.14], [1047, 0.4]]);
+const sUnlock = () => play([[523, 0.12], [659, 0.12], [784, 0.12], [988, 0.12], [1319, 0.5]]);
+
+/* ---------- voice (Web Speech API, British English) ---------- */
+let voiceObj = null;
+// Apple's "novelty" voices sound robotic — never auto-pick them
+const NOVELTY = /eddy|flo|grandma|grandpa|reed|rocko|sandy|shelley|albert|bad news|bahh|bells|boing|bubbles|cellos|fred|good news|jester|junior|kathy|organ|ralph|superstar|trinoids|whisper|wobble|zarvox/i;
+function scoreVoice(v) {
+  const n = v.name.toLowerCase(), gb = /en[-_]gb/i.test(v.lang);
+  if (gb && /serena|kate|martha|stephanie/.test(n)) return 100; // natural female GB (iPad)
+  if (/google uk english female/.test(n)) return 95;            // Chrome
+  if (/sonia|libby|maisie/.test(n)) return 90;                  // Edge natural GB female
+  if (/moira/.test(n)) return 80;                               // natural female en-IE
+  if (/karen/.test(n)) return 75;                               // natural female en-AU
+  if (/tessa/.test(n)) return 70;                               // natural female en-ZA
+  if (gb && /daniel/.test(n)) return 65;                        // natural GB male beats robots
+  if (/google uk english male/.test(n)) return 60;
+  if (gb && !NOVELTY.test(n)) return 50;
+  if (/samantha/.test(n)) return 45;                            // natural female en-US
+  if (!NOVELTY.test(n)) return 20;
+  return gb ? 10 : 0;
+}
+// "characters" — tuned pitch/rate presets applied to the best lady voice on the device
+const PERSONAS = [
+  { id: "sunny",  label: "🌼 Sunny",  pitch: 1.18, rate: 1.08 },
+  { id: "fairy",  label: "🧚 Fairy",  pitch: 1.32, rate: 1.1 },
+  { id: "gentle", label: "🌙 Gentle", pitch: 1.05, rate: 0.98 }
+];
+const FEMALE = /kate|serena|martha|stephanie|samantha|allison|ava|susan|zoe|nicky|joelle|sonia|libby|maisie|aria|jenny|michelle|female/i;
+function bestFemaleVoice() {
+  try {
+    return speechSynthesis.getVoices()
+      .filter(v => /en[-_](GB|US)/i.test(v.lang) && !NOVELTY.test(v.name) && FEMALE.test(v.name))
+      .sort((a, b) => scoreVoice(b) - scoreVoice(a))[0] || null;
+  } catch (e) { return null; }
+}
+function pickVoice() {
+  try {
+    const vs = speechSynthesis.getVoices().filter(v => /en[-_](GB|US)/i.test(v.lang));
+    if (S.settings.voiceName) {
+      const v = vs.find(x => x.name === S.settings.voiceName);
+      if (v) { voiceObj = v; return; }
+    }
+    voiceObj = vs.sort((a, b) => scoreVoice(b) - scoreVoice(a))[0] || null;
+  } catch (e) {}
+}
+if ("speechSynthesis" in window) {
+  pickVoice();
+  speechSynthesis.onvoiceschanged = pickVoice;
+}
+function speak(text, opts = {}) {
+  if (!S.settings.voice || !("speechSynthesis" in window) || !text) return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    if (voiceObj) { u.voice = voiceObj; u.lang = voiceObj.lang; }
+    else u.lang = "en-GB";
+    const per = PERSONAS.find(p => p.id === S.settings.voiceStyle);
+    u.rate = opts.rate || (per ? per.rate : 1.06);
+    u.pitch = opts.pitch || (per ? per.pitch : 1.1);
+    // small delay: Safari can swallow an utterance queued right after cancel()
+    setTimeout(() => { try { speechSynthesis.speak(u); } catch (e) {} }, 40);
+  } catch (e) {}
+}
+const nameBit = () => (S.name ? ", " + S.name : "");
+
+/* ---------- butterfly species ---------- */
+const FW = "M1 -5 C 6 -19 23 -28 30 -24 C 34 -20 29 -9 19 -3 C 12 0 5 1 2 -2 Z";
+const HW = "M2 0 C 9 1 18 6 20 12 C 20 18 14 21 8 19 C 4 17 1 10 1 4 Z";
+const SPECIES = [
+  { id: "large_white", name: "Large White", topic: "x2", t: "c", fw: "#f7f3e8", hw: "#efe9d6",
+    deco: [{ t: "tip", f: "#4a473f" }, { t: "dot", x: 13, y: -12, r: 2.4, f: "#4a473f" }],
+    fact: "Its caterpillars simply love munching cabbages!" },
+  { id: "common_blue", name: "Common Blue", topic: "x5", t: "c", fw: "#6b7fdd", hw: "#8b9ae8",
+    deco: [{ t: "dot", x: 8, y: 13, r: 1.4, f: "#fff" }, { t: "dot", x: 13, y: 10, r: 1.4, f: "#fff" }, { t: "dot", x: 17, y: -15, r: 1.5, f: "#fff" }],
+    fact: "On sunny days the males sparkle like little pieces of sky." },
+  { id: "brimstone", name: "Brimstone", topic: "x10", t: "c", fw: "#e9e163", hw: "#dde07c",
+    deco: [{ t: "dot", x: 15, y: -13, r: 1.8, f: "#d98a2b" }, { t: "dot", x: 10, y: 11, r: 1.8, f: "#d98a2b" }],
+    fact: "Some say the word butterfly comes from its butter-yellow wings!" },
+  { id: "red_admiral", name: "Red Admiral", topic: "add", t: "c", fw: "#2f2a26", hw: "#3a332b",
+    deco: [{ t: "band", f: "#d8402c" }, { t: "hband", f: "#d8402c" }, { t: "dot", x: 23, y: -21, r: 1.6, f: "#fff" }, { t: "dot", x: 26, y: -17, r: 1.3, f: "#fff" }],
+    fact: "A bold flyer that travels here all the way from Africa!" },
+  { id: "tortoiseshell", name: "Small Tortoiseshell", topic: "sub", t: "c", fw: "#e07b2a", hw: "#d96f28",
+    deco: [{ t: "tip", f: "#3a3026" }, { t: "dot", x: 9, y: -9, r: 2.2, f: "#33291f" }, { t: "dot", x: 16, y: -15, r: 2, f: "#33291f" }, { t: "dot", x: 6, y: 15, r: 1.3, f: "#4f74d8" }, { t: "dot", x: 11, y: 16, r: 1.3, f: "#4f74d8" }, { t: "dot", x: 15, y: 13, r: 1.3, f: "#4f74d8" }],
+    fact: "It loves sunbathing on warm garden walls." },
+  { id: "orange_tip", name: "Orange-tip", topic: "div", t: "c", fw: "#f5f1e4", hw: "#edefdc",
+    deco: [{ t: "tip", f: "#e8852b" }, { t: "dot", x: 12, y: -11, r: 1.8, f: "#3a3026" }],
+    fact: "Only the boys wear the bright orange wing tips!" },
+  { id: "peacock", name: "Peacock", topic: "miss", t: "c", fw: "#b03a2e", hw: "#a33529",
+    deco: [{ t: "eye", x: 20, y: -18, r: 4.5, c1: "#e8c84f", c2: "#4f74d8" }, { t: "eye", x: 10, y: 11, r: 3.5, c1: "#e8c84f", c2: "#4f74d8" }],
+    fact: "Its eyespots trick birds into thinking it is much bigger!" },
+  { id: "holly_blue", name: "Holly Blue", topic: "pv", t: "c", fw: "#a6bfec", hw: "#b9cdf2",
+    deco: [{ t: "dot", x: 11, y: -11, r: 1.1, f: "#4a4a55" }, { t: "dot", x: 16, y: -15, r: 1.1, f: "#4a4a55" }, { t: "dot", x: 9, y: 12, r: 1.1, f: "#4a4a55" }],
+    fact: "Look up! It flutters high around holly and ivy." },
+  { id: "comma", name: "Comma", topic: "frac", t: "c", fw: "#d8842f", hw: "#cc7a2a",
+    deco: [{ t: "dot", x: 9, y: -9, r: 1.8, f: "#5a3a1a" }, { t: "dot", x: 16, y: -15, r: 1.6, f: "#5a3a1a" }, { t: "dot", x: 21, y: -19, r: 1.4, f: "#5a3a1a" }, { t: "dot", x: 9, y: 12, r: 1.6, f: "#fff" }],
+    fact: "It carries a tiny white comma written on its wing!" },
+  { id: "painted_lady", name: "Painted Lady", topic: "x3", t: "c", fw: "#e0945a", hw: "#daa05e",
+    deco: [{ t: "tip", f: "#3a3026" }, { t: "dot", x: 23, y: -21, r: 1.5, f: "#fff" }, { t: "dot", x: 10, y: -9, r: 1.8, f: "#6b4a2a" }, { t: "dot", x: 10, y: 13, r: 1.5, f: "#6b4a2a" }],
+    fact: "One of the greatest travellers in the whole butterfly world." },
+  { id: "speckled_wood", name: "Speckled Wood", topic: "x4", t: "c", fw: "#6b5535", hw: "#74603c",
+    deco: [{ t: "dot", x: 11, y: -11, r: 2, f: "#e8dca8" }, { t: "dot", x: 18, y: -17, r: 1.8, f: "#e8dca8" }, { t: "dot", x: 24, y: -21, r: 1.5, f: "#e8dca8" }, { t: "eye", x: 11, y: 12, r: 2.6, c1: "#e8dca8", c2: "#3a2f1f", c3: "#fff" }],
+    fact: "It dances in the sunny spots between the trees." },
+  { id: "gatekeeper", name: "Gatekeeper", topic: "x8", t: "c", fw: "#e0913a", hw: "#d4863a",
+    deco: [{ t: "tip", f: "#6b4f2a" }, { t: "eye", x: 20, y: -18, r: 3.5, c1: "#33291f", c2: "#fff", c3: "#33291f" }, { t: "hband", f: "#6b4f2a" }],
+    fact: "It guards the hedgerows and country gates in high summer." },
+  { id: "swallowtail", name: "Swallowtail", topic: "add2", t: "c", fw: "#efe18a", hw: "#e8da7e",
+    deco: [{ t: "tip", f: "#2c2a20" }, { t: "band", f: "#2c2a20" }, { t: "dot", x: 12, y: 14, r: 1.8, f: "#4f74d8" }, { t: "dot", x: 7, y: 16, r: 1.5, f: "#d8402c" }],
+    fact: "Britain's biggest butterfly — it lives in the Norfolk Broads!" },
+  { id: "fritillary", name: "Silver-washed Fritillary", topic: "sub2", t: "c", fw: "#de8c33", hw: "#d28430",
+    deco: [{ t: "dot", x: 9, y: -8, r: 1.6, f: "#4a3a20" }, { t: "dot", x: 14, y: -12, r: 1.6, f: "#4a3a20" }, { t: "dot", x: 19, y: -16, r: 1.6, f: "#4a3a20" }, { t: "dot", x: 24, y: -20, r: 1.4, f: "#4a3a20" }, { t: "dot", x: 10, y: 12, r: 1.5, f: "#4a3a20" }],
+    fact: "Streaks of silver shimmer underneath its wings." },
+  { id: "meadow_brown", name: "Meadow Brown", topic: null, t: "u", fw: "#7a5c38", hw: "#86663e",
+    deco: [{ t: "dot", x: 18, y: -16, r: 4, f: "#d8893a" }, { t: "eye", x: 19, y: -17, r: 2.2, c1: "#33291f", c2: "#fff", c3: "#33291f" }],
+    fact: "The quiet queen of every English meadow." },
+  { id: "small_copper", name: "Small Copper", topic: null, t: "u", fw: "#e0762d", hw: "#6b5535",
+    deco: [{ t: "dot", x: 10, y: -9, r: 1.6, f: "#3a2f1f" }, { t: "dot", x: 15, y: -13, r: 1.6, f: "#3a2f1f" }, { t: "dot", x: 20, y: -17, r: 1.4, f: "#3a2f1f" }, { t: "hband", f: "#e0762d" }],
+    fact: "A tiny spark of copper darting over the grass." },
+  { id: "purple_emperor", name: "Purple Emperor", topic: null, t: "r", fw: "#5a4bb8", hw: "#4f43a8",
+    deco: [{ t: "band", f: "#fff" }, { t: "dot", x: 8, y: 13, r: 1.6, f: "#fff" }, { t: "eye", x: 12, y: 16, r: 2, c1: "#d8893a", c2: "#33291f" }],
+    fact: "His Majesty lives at the very tops of oak trees and is terribly hard to spot!" },
+  { id: "adonis_blue", name: "Adonis Blue", topic: null, t: "r", fw: "#3f8fe8", hw: "#58a0ec",
+    deco: [{ t: "dot", x: 6, y: 16, r: 1.2, f: "#fff" }, { t: "dot", x: 11, y: 16, r: 1.2, f: "#fff" }, { t: "dot", x: 15, y: 13, r: 1.2, f: "#fff" }, { t: "dot", x: 19, y: -17, r: 1.3, f: "#fff" }],
+    fact: "The brightest, most dazzling blue in all of Britain." },
+  { id: "clouded_yellow", name: "Clouded Yellow", topic: null, t: "r", fw: "#e8b73a", hw: "#ddb24a",
+    deco: [{ t: "tip", f: "#7a5a22" }, { t: "dot", x: 14, y: -13, r: 2, f: "#7a5a22" }, { t: "dot", x: 10, y: 11, r: 2, f: "#d98a2b" }],
+    fact: "A golden visitor that sails across the sea to see us." },
+  { id: "marbled_white", name: "Marbled White", topic: null, t: "r", fw: "#f0ece0", hw: "#e9e5d6",
+    deco: [{ t: "tip", f: "#3a3a35" }, { t: "dot", x: 8, y: -8, r: 2.4, f: "#3a3a35" }, { t: "dot", x: 15, y: -13, r: 2.4, f: "#3a3a35" }, { t: "dot", x: 11, y: -17, r: 2, f: "#3a3a35" }, { t: "dot", x: 9, y: 13, r: 2, f: "#3a3a35" }, { t: "dot", x: 15, y: 10, r: 1.6, f: "#3a3a35" }],
+    fact: "Not marbled, not just white — a flying chessboard!" }
+];
+const SP = {};
+SPECIES.forEach(sp => SP[sp.id] = sp);
+const WANDERERS = ["meadow_brown", "small_copper"];
+const RARES = ["purple_emperor", "adonis_blue", "clouded_yellow", "marbled_white"];
+
+function decoSVG(d) {
+  if (d.t === "dot") return '<circle cx="' + d.x + '" cy="' + d.y + '" r="' + d.r + '" fill="' + d.f + '"/>';
+  if (d.t === "tip") return '<path d="M15 -21 C 20 -26 26 -28 30 -24 C 33 -20 31 -13 27 -10 C 26 -16 21 -19 15 -21 Z" fill="' + d.f + '"/>';
+  if (d.t === "band") return '<path d="M7 -7 C 13 -13 19 -17 26 -20 L 28 -16 C 21 -13 14 -9 10 -4 Z" fill="' + d.f + '"/>';
+  if (d.t === "hband") return '<path d="M4 14 C 8 19 14 20 19 13 L 16 10 C 12 15 8 15 6 12 Z" fill="' + d.f + '"/>';
+  if (d.t === "eye") {
+    return '<circle cx="' + d.x + '" cy="' + d.y + '" r="' + d.r + '" fill="' + d.c1 + '"/>' +
+           '<circle cx="' + d.x + '" cy="' + d.y + '" r="' + (d.r * 0.55).toFixed(1) + '" fill="' + d.c2 + '"/>' +
+           '<circle cx="' + d.x + '" cy="' + d.y + '" r="' + (d.r * 0.28).toFixed(1) + '" fill="' + (d.c3 || "#2c2420") + '"/>';
+  }
+  return "";
+}
+function bflySVG(sp, opts = {}) {
+  const sil = opts.silhouette;
+  const fw = sil ? "#6a6254" : sp.fw, hw = sil ? "#7a7263" : sp.hw, body = sil ? "#4a4338" : "#3a3026";
+  const deco = sil ? "" : (sp.deco || []).map(decoSVG).join("");
+  const wing = '<path d="' + FW + '" fill="' + fw + '"/><path d="' + HW + '" fill="' + hw + '" opacity="0.85"/>' + deco;
+  return '<g class="bfly">' +
+    '<g class="wl">' + wing + '</g>' +
+    '<g class="wr">' + wing + '</g>' +
+    '<ellipse rx="2.5" ry="10" fill="' + body + '"/><circle cy="-12" r="2.6" fill="' + body + '"/>' +
+    '<path d="M-1 -13 C -4 -18 -6 -20 -8 -21 M1 -13 C 4 -18 6 -20 8 -21" stroke="' + body + '" stroke-width="1" fill="none"/></g>';
+}
+function cardSVG(sp, sil) {
+  return '<svg viewBox="-32 -32 64 58">' + bflySVG(sp, { silhouette: sil }) + '</svg>';
+}
+
+/* ---------- question pictures ---------- */
+function pieSVG(parts, shaded) {
+  const cx = 50, cy = 50, r = 44;
+  let p = "";
+  for (let i = 0; i < parts; i++) {
+    const a0 = -Math.PI / 2 + i * 2 * Math.PI / parts, a1 = a0 + 2 * Math.PI / parts;
+    const x0 = cx + r * Math.cos(a0), y0 = cy + r * Math.sin(a0);
+    const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
+    p += '<path d="M' + cx + ' ' + cy + ' L' + x0.toFixed(1) + ' ' + y0.toFixed(1) +
+         ' A' + r + ' ' + r + ' 0 0 1 ' + x1.toFixed(1) + ' ' + y1.toFixed(1) + ' Z" fill="' +
+         (i < shaded ? "#e8638c" : "#fff") + '" stroke="#5a4a2f" stroke-width="2.5" stroke-linejoin="round"/>';
+  }
+  return '<svg viewBox="-2 -2 104 104" style="height:96px">' + p + '</svg>';
+}
+function berryC(cx, cy) {
+  return '<circle cx="' + cx + '" cy="' + cy + '" r="7" fill="#c9415a" stroke="#8f2c40" stroke-width="1.5"/>';
+}
+function berriesSVG(n) {
+  let c = "";
+  for (let i = 0; i < n; i++) c += berryC(10 + (i % 10) * 17, 10 + Math.floor(i / 10) * 18);
+  const rows = Math.ceil(n / 10);
+  const w = 10 + Math.min(n, 10) * 17, h = 2 + rows * 18;
+  return '<svg viewBox="0 0 ' + w + ' ' + h + '" style="height:' + (rows * 30) + 'px">' + c + '</svg>';
+}
+function flowerG(cx, cy) {
+  let p = "";
+  for (let i = 0; i < 5; i++) {
+    const a = -Math.PI / 2 + i * 2 * Math.PI / 5;
+    p += '<circle cx="' + (cx + 6.5 * Math.cos(a)).toFixed(1) + '" cy="' + (cy + 6.5 * Math.sin(a)).toFixed(1) + '" r="4.5" fill="#e6a4b8"/>';
+  }
+  return p + '<circle cx="' + cx + '" cy="' + cy + '" r="4" fill="#e8c84f"/>';
+}
+function shareSVG(a, n) {
+  if (a > 20) return "";
+  let c = "";
+  for (let i = 0; i < a; i++) c += berryC(10 + (i % 10) * 17, 10 + Math.floor(i / 10) * 18);
+  const rows = Math.ceil(a / 10);
+  const fy = 14 + rows * 18 + 10;
+  for (let i = 0; i < n; i++) c += flowerG(14 + i * 24, fy);
+  const w = Math.max(10 + Math.min(a, 10) * 17, 14 + n * 24), h = fy + 14;
+  return '<svg viewBox="0 0 ' + w + ' ' + h + '" style="height:' + Math.min(96, h * 1.6) + 'px">' + c + '</svg>';
+}
+
+/* ---------- question generators ---------- */
+function numOptions(correct, pool) {
+  const opts = [String(correct)];
+  const cand = shuffle(pool.filter(v => v > 0 && v !== correct));
+  for (const v of cand) { const s = String(v); if (opts.length < 3 && !opts.includes(s)) opts.push(s); }
+  let k = 2;
+  while (opts.length < 3) { const v = correct + k; if (v > 0 && !opts.includes(String(v))) opts.push(String(v)); k++; }
+  return shuffle(opts);
+}
+function tableMode(n, year, sp, label) {
+  return { label, year, sp, gen(p) {
+    const a = p ? p.a : rnd(1, 12);
+    const c = a * n;
+    return { p: { a }, text: a + " × " + n + " = ?", say: "What is " + words(a) + " times " + words(n) + "?",
+             correct: String(c), options: numOptions(c, [c - n, c + n, c - 1, c + 1, c + 10]) };
+  } };
+}
+const MODES = {
+  x2: tableMode(2, 2, "large_white", "2 times"),
+  x5: tableMode(5, 2, "common_blue", "5 times"),
+  x10: tableMode(10, 2, "brimstone", "10 times"),
+  add: { label: "Adding", year: 2, sp: "red_admiral", gen(p) {
+    const kind = p ? p.kind : (Math.random() < 0.3 ? "tens" : "ones");
+    const a = p ? p.a : (kind === "tens" ? rnd(11, 69) : rnd(11, 89));
+    const b = p ? p.b : (kind === "tens" ? rnd(1, Math.floor((99 - a) / 10)) * 10 : rnd(2, 9));
+    const c = a + b;
+    return { p: { kind, a, b }, text: a + " + " + b + " = ?", say: "What is " + words(a) + " add " + words(b) + "?",
+             correct: String(c), options: numOptions(c, [c - 1, c + 1, c + 10, c - 10, c + 2]) };
+  } },
+  sub: { label: "Taking away", year: 2, sp: "tortoiseshell", gen(p) {
+    const kind = p ? p.kind : (Math.random() < 0.3 ? "tens" : "ones");
+    const a = p ? p.a : (kind === "tens" ? rnd(31, 99) : rnd(11, 99));
+    const b = p ? p.b : (kind === "tens" ? rnd(1, Math.min(3, Math.floor((a - 1) / 10))) * 10 : rnd(2, 9));
+    const c = a - b;
+    return { p: { kind, a, b }, text: a + " − " + b + " = ?", say: "What is " + words(a) + " take away " + words(b) + "?",
+             correct: String(c), options: numOptions(c, [c - 1, c + 1, c + 10, c - 10, c - 2]) };
+  } },
+  div: { label: "Sharing", year: 2, sp: "orange_tip", gen(p) {
+    const n = p ? p.n : [2, 5, 10][rnd(0, 2)];
+    const q = p ? p.q : rnd(1, 10);
+    const a = n * q;
+    return { p: { n, q }, text: a + " ÷ " + n + " = ?",
+             say: "Share " + words(a) + " berries between " + words(n) + " flowers. How many berries does each flower get?",
+             correct: String(q), options: numOptions(q, [q - 1, q + 1, q + 2, n, q + 10]),
+             picture: shareSVG(a, n) };
+  } },
+  miss: { label: "Mystery number", year: 2, sp: "peacock", gen(p) {
+    const f = p ? p.f : ["a+?", "?+b", "a-?", "?-b", "n×?"][rnd(0, 4)];
+    let text, say, x, pp;
+    if (f === "a+?") {
+      const a = p ? p.a : rnd(3, 15); x = p ? p.x : rnd(2, 9);
+      text = a + " + ? = " + (a + x);
+      say = cap(words(a)) + " add the mystery number makes " + words(a + x) + ". What is the mystery number?";
+      pp = { f, a, x };
+    } else if (f === "?+b") {
+      const b = p ? p.b : rnd(2, 9); x = p ? p.x : rnd(3, 15);
+      text = "? + " + b + " = " + (x + b);
+      say = "The mystery number add " + words(b) + " makes " + words(x + b) + ". What is the mystery number?";
+      pp = { f, b, x };
+    } else if (f === "a-?") {
+      const a = p ? p.a : rnd(8, 20); x = p ? p.x : rnd(2, a - 2);
+      text = a + " − ? = " + (a - x);
+      say = cap(words(a)) + " take away the mystery number leaves " + words(a - x) + ". What is the mystery number?";
+      pp = { f, a, x };
+    } else if (f === "?-b") {
+      const b = p ? p.b : rnd(2, 9); x = p ? p.x : rnd(b + 2, 20);
+      text = "? − " + b + " = " + (x - b);
+      say = "The mystery number take away " + words(b) + " leaves " + words(x - b) + ". What is the mystery number?";
+      pp = { f, b, x };
+    } else {
+      const n = p ? p.n : [2, 5, 10][rnd(0, 2)]; x = p ? p.x : rnd(2, 10);
+      text = n + " × ? = " + (n * x);
+      say = cap(words(n)) + " times the mystery number makes " + words(n * x) + ". What is the mystery number?";
+      pp = { f, n, x };
+    }
+    return { p: pp, text, say, correct: String(x), options: numOptions(x, [x - 1, x + 1, x + 2, x - 2, x + 10]) };
+  } },
+  pv: { label: "Tens & ones", year: 2, sp: "holly_blue", gen(p) {
+    const kind = p ? p.kind : (Math.random() < 0.5 ? "make" : "compare");
+    if (kind === "make") {
+      const t = p ? p.t : rnd(2, 9), o = p ? p.o : rnd(1, 9);
+      const c = t * 10 + o;
+      return { p: { kind, t, o }, text: t + " tens and " + o + " ones = ?",
+               say: "What number is " + words(t) + " tens and " + words(o) + " ones?",
+               correct: String(c), options: numOptions(c, [t + o, o * 10 + t, c + 10, c - 10, c + 1]) };
+    }
+    let a = p ? p.a : rnd(10, 99), b;
+    if (p) { b = p.b; }
+    else if (Math.random() < 0.18) { b = a; }
+    else { do { b = rnd(10, 99); } while (b === a); }
+    const correct = a < b ? "<" : a > b ? ">" : "=";
+    return { p: { kind, a, b }, text: a + " ▢ " + b,
+             say: "Which sign goes in the middle? Is " + words(a) + " less than, greater than, or equal to " + words(b) + "?",
+             correct, options: shuffle(["<", ">", "="]),
+             explain: a + " " + correct + " " + b + " — the crocodile mouth always eats the bigger number",
+             sayExplain: words(a) + " is " + sayVal(correct) + " " + words(b) + ". The crocodile mouth always eats the bigger number" };
+  } },
+  frac: { label: "Fractions", year: 2, sp: "comma", gen(p) {
+    const kind = p ? p.kind : (Math.random() < 0.5 ? "pie" : "of");
+    if (kind === "pie") {
+      const PIES = [{ parts: 2, shaded: 1, f: "½" }, { parts: 3, shaded: 1, f: "⅓" }, { parts: 4, shaded: 1, f: "¼" }, { parts: 4, shaded: 3, f: "¾" }];
+      const i = p ? p.i : rnd(0, 3);
+      const v = PIES[i];
+      const others = shuffle(PIES.map(x => x.f).filter(f => f !== v.f)).slice(0, 2);
+      return { p: { kind, i }, text: "What fraction is coloured in?",
+               say: "Look at the circle. What fraction is coloured in?",
+               correct: v.f, options: shuffle([v.f, ...others]),
+               explain: "it is " + v.f + ", " + sayVal(v.f),
+               sayExplain: "it is " + sayVal(v.f),
+               picture: pieSVG(v.parts, v.shaded) };
+    }
+    const FRACS = [{ d: 2, w: "one half", sym: "½" }, { d: 4, w: "one quarter", sym: "¼" }, { d: 3, w: "one third", sym: "⅓" }];
+    const fi = p ? p.fi : rnd(0, 2);
+    const fr = FRACS[fi];
+    const m = p ? p.m : rnd(1, 6);
+    const n = fr.d * m;
+    return { p: { kind, fi, m }, text: fr.sym + " of " + n + " = ?",
+             say: "What is " + fr.w + " of " + words(n) + "?",
+             correct: String(m), options: numOptions(m, [m + 1, m - 1, n - m, 2 * m, m + 2]),
+             picture: berriesSVG(n) };
+  } },
+  x3: tableMode(3, 3, "painted_lady", "3 times"),
+  x4: tableMode(4, 3, "speckled_wood", "4 times"),
+  x8: tableMode(8, 3, "gatekeeper", "8 times"),
+  add2: { label: "Big adding", year: 3, sp: "swallowtail", gen(p) {
+    const a = p ? p.a : rnd(12, 79), b = p ? p.b : rnd(11, 99 - a);
+    const c = a + b;
+    return { p: { a, b }, text: a + " + " + b + " = ?", say: "What is " + words(a) + " add " + words(b) + "?",
+             correct: String(c), options: numOptions(c, [c - 1, c + 1, c + 10, c - 10, c + 2]) };
+  } },
+  sub2: { label: "Big taking away", year: 3, sp: "fritillary", gen(p) {
+    const a = p ? p.a : rnd(25, 99), b = p ? p.b : rnd(11, a - 12);
+    const c = a - b;
+    return { p: { a, b }, text: a + " − " + b + " = ?", say: "What is " + words(a) + " take away " + words(b) + "?",
+             correct: String(c), options: numOptions(c, [c - 1, c + 1, c + 10, c - 10, c - 2]) };
+  } }
+};
+
+/* ---------- game state ---------- */
+const TOTAL = 10;
+const PRAISE = ["Brilliant!", "Well done!", "Super!", "Amazing!", "Lovely work!", "Beautiful!", "You star!", "Fantastic!", "Hooray!", "Splendid!"];
+// pick from arr without repeats until the whole bag is used, never the same twice running
+const bags = {}, lastPick = {};
+function vary(key, arr) {
+  let b = bags[key];
+  if (!b || !b.length) {
+    b = bags[key] = shuffle(arr.slice());
+    if (arr.length > 1 && b[0] === lastPick[key]) b.push(b.shift());
+  }
+  const v = b.shift();
+  lastPick[key] = v;
+  return v;
+}
+let mode = "x2", qnum = 0, score = 0, locked = false, q = null;
+let roundNew = [], roundIds = [], promptT = null;
+
+/* ---------- stars & footer ---------- */
+function starSVG(filled) {
+  const c = filled ? "#EF9F27" : "#d8cdb4";
+  return '<svg class="star" viewBox="0 0 24 24"><path d="M12 2.5 L14.6 9 L21.5 9.4 L16.2 13.8 L18 20.5 L12 16.8 L6 20.5 L7.8 13.8 L2.5 9.4 L9.4 9 Z" fill="' + (filled ? c : "none") + '" stroke="' + c + '" stroke-width="1.6" stroke-linejoin="round"/></svg>';
+}
+function setStars() {
+  let h = "";
+  for (let i = 0; i < TOTAL; i++) h += starSVG(i < score);
+  $("stars").innerHTML = h;
+}
+function setFooter() {
+  const n = totalCaught();
+  $("totalCaught").textContent = n > 0 ? "🦋 " + n + " caught altogether" : "";
+}
+
+/* ---------- mode picker ---------- */
+function buildModes() {
+  const groups = { 2: [], 3: [] };
+  for (const [id, m] of Object.entries(MODES)) groups[m.year].push([id, m]);
+  $("modes").innerHTML = [2, 3].map(y =>
+    '<div class="ygroup"><div class="ylabel">' + (y === 2 ? "Year 2" : "Year 3 ✨") + '</div><div class="chips">' +
+    groups[y].map(([id, m]) =>
+      '<button class="mode-btn' + (id === mode ? " on" : "") + (y === 3 ? " y3" : "") + '" data-m="' + id + '">' +
+      m.label + '<span class="dot" id="dot-' + id + '"></span></button>').join("") +
+    '</div></div>').join("");
+  document.querySelectorAll(".mode-btn").forEach(b => {
+    b.onclick = () => {
+      sTap();
+      document.querySelectorAll(".mode-btn").forEach(x => x.classList.remove("on"));
+      b.classList.add("on");
+      mode = b.dataset.m;
+      restart();
+    };
+  });
+  updateDots();
+}
+function updateDots() {
+  for (const id of Object.keys(MODES)) {
+    const el = $("dot-" + id);
+    if (!el) continue;
+    const c = (S.topics[id] || {}).correct || 0;
+    el.style.background = c >= 40 ? "#e8b73a" : c >= 20 ? "#6aa84f" : c >= 1 ? "#b8d8a0" : "#e4dcc8";
+  }
+}
+
+/* ---------- catching butterflies ---------- */
+function addToMeadow(spId) {
+  const x = rnd(40, 640), y = rnd(20, 90), s = (0.6 + Math.random() * 0.45).toFixed(2), r = rnd(-25, 25);
+  $("bfield").insertAdjacentHTML("beforeend",
+    '<g transform="translate(' + x + " " + y + ") rotate(" + r + ") scale(" + s + ')">' + bflySVG(SP[spId]) + '</g>');
+}
+function celebrate(sp) {
+  const old = $("flyer");
+  if (old) old.remove();
+  const d = document.createElement("div");
+  d.id = "flyer";
+  d.innerHTML = '<span class="bob"><svg class="flying" width="90" viewBox="-32 -32 64 58">' + bflySVG(sp) + '</svg></span>';
+  document.body.appendChild(d);
+  setTimeout(() => d.remove(), 4200);
+  sUnlock();
+}
+// returns the species caught this answer; first element is the topic species
+function awardCatch() {
+  const ids = [MODES[mode].sp];
+  const st = topicStat(mode);
+  if (st.correct >= 15 && Math.random() < 0.25) ids.push(WANDERERS[rnd(0, 1)]);
+  const news = [];
+  for (const id of ids) {
+    const isNew = !(S.caught[id] > 0);
+    S.caught[id] = (S.caught[id] || 0) + 1;
+    roundIds.push(id);
+    addToMeadow(id);
+    if (isNew) { roundNew.push(id); news.push(id); }
+  }
+  return news;
+}
+function unlockRare() {
+  const id = RARES.find(r => !(S.caught[r] > 0));
+  if (!id) return null;
+  S.caught[id] = 1;
+  roundNew.push(id);
+  addToMeadow(id);
+  celebrate(SP[id]);
+  return SP[id];
+}
+
+/* ---------- question flow ---------- */
+function drawQuestion() {
+  const st = topicStat(mode);
+  const keys = Object.keys(st.missed);
+  if (keys.length && Math.random() < 0.34) {
+    const k = keys[rnd(0, keys.length - 1)];
+    const qq = MODES[mode].gen(st.missed[k].p);
+    qq.key = k;
+    return qq;
+  }
+  const qq = MODES[mode].gen();
+  qq.key = mode + "|" + JSON.stringify(qq.p);
+  return qq;
+}
+function next() {
+  if (qnum >= TOTAL) return end();
+  locked = false;
+  q = drawQuestion();
+  $("qcount").textContent = "Question " + (qnum + 1) + " of " + TOTAL;
+  $("question").textContent = q.text;
+  $("question").style.fontSize = q.text.length > 12 ? "30px" : "52px";
+  $("picture").innerHTML = q.picture || "";
+  $("msg").textContent = "";
+  $("answers").innerHTML = q.options.map(v => '<button class="ans-btn" data-v="' + v + '">' + v + "</button>").join("");
+  document.querySelectorAll(".ans-btn").forEach(btn => { btn.onclick = () => pick(btn); });
+  speak(q.say);
+  clearTimeout(promptT);
+  promptT = setTimeout(() => {
+    if (!locked) speak(vary("nudge", ["Take your time. ", "No hurry. ", "Have a little think. "]) + q.say, { rate: 0.98 });
+  }, 25000);
+}
+function pick(btn) {
+  if (locked) return;
+  locked = true;
+  clearTimeout(promptT);
+  const v = btn.dataset.v;
+  const st = topicStat(mode);
+  st.asked++;
+  if (v === q.correct) {
+    score++;
+    st.correct++;
+    delete st.missed[q.key];
+    btn.classList.add("good");
+    const news = awardCatch();
+    const spName = SP[MODES[mode].sp].name;
+    if (news.length) {
+      const nsp = SP[news[news.length - 1]];
+      celebrate(nsp);
+      $("msg").textContent = vary("newMsg", [
+        "✨ NEW butterfly! You caught a {s}!",
+        "✨ A brand new species — the {s}!",
+        "✨ Your first ever {s}!"
+      ]).replace("{s}", nsp.name);
+      speak(vary("newSay", [
+        "A new butterfly for your album{n}! The {s}!",
+        "Ooh, a brand new visitor{n}! It is the {s}!",
+        "Look{n}! A {s} — the very first one for your album!"
+      ]).replace("{n}", nameBit()).replace("{s}", nsp.name));
+    } else {
+      const pr = vary("praise", PRAISE);
+      $("msg").textContent = pr + " " + vary("landed", [
+        "A {s} landed!", "Here comes a {s}!", "A {s} fluttered down!",
+        "You caught a {s}!", "A {s} joins your meadow!"
+      ]).replace("{s}", spName);
+      speak(vary("praiseSay", [
+        "{p}{n}! You caught a {s}.",
+        "{p}{n}! Here comes a {s}.",
+        "{p} A {s} has fluttered down.",
+        "{p}{n}!",
+        "{p} Another {s} for your meadow."
+      ]).replace("{p}", pr.replace("!", "")).replace("{n}", nameBit()).replace("{s}", spName));
+    }
+    $("msg").style.color = "#2c6b44";
+    sCorrect();
+  } else {
+    btn.classList.add("bad");
+    document.querySelectorAll(".ans-btn").forEach(b => { if (b.dataset.v === q.correct) b.classList.add("good"); });
+    st.missed[q.key] = { p: q.p, t: q.text, n: ((st.missed[q.key] || {}).n || 0) + 1 };
+    const ex = q.explain || ("the answer is " + q.correct);
+    $("msg").textContent = vary("wrongLead", ["Not quite — ", "Good try — ", "Almost — ", "Nearly — "]) + ex + ". " +
+      vary("wrongTail", ["Next one!", "On we go!", "Let's try another!"]);
+    $("msg").style.color = "#5a4a2f";
+    speak(vary("wrongSayLead", ["Not quite. ", "Good try. ", "Almost. ", "Never mind. "]) +
+      cap(q.sayExplain || ("The answer is " + sayVal(q.correct))) + ". " +
+      vary("wrongSayTail", ["On to the next one!", "Here comes another one!", "You'll get the next one!", "Let's try another."]));
+    sWrong();
+  }
+  saveState();
+  setStars();
+  setFooter();
+  qnum++;
+  setTimeout(next, 2000);
+}
+function end() {
+  clearTimeout(promptT);
+  S.rounds++;
+  if (score > (S.bestRound[mode] || 0)) S.bestRound[mode] = score;
+  let rare = null;
+  if (score >= 9) rare = unlockRare();
+  saveState();
+  updateDots();
+  $("qcount").textContent = "";
+  $("picture").innerHTML = "";
+  const head = score >= 8 ? vary("head8", ["Wonderful!", "Magnificent!", "Splendid!", "Marvellous!"])
+             : score >= 5 ? vary("head5", ["Great trying!", "Well flown!", "Lovely effort!"])
+             : vary("head0", ["Good practice!", "Keep going!", "Every try helps!"]);
+  $("question").textContent = head;
+  $("question").style.fontSize = "44px";
+  $("msg").textContent = "";
+  let catchLine = "You caught " + score + (score === 1 ? " butterfly" : " butterflies") + " out of " + TOTAL + "!";
+  if (rare) catchLine += " ✨ A rare " + rare.name + " has arrived!";
+  const uniq = [...new Set(roundIds)];
+  let say = "You caught " + words(score) + (score === 1 ? " butterfly" : " butterflies") + nameBit() + "!";
+  const newNames = roundNew.map(id => SP[id].name);
+  if (rare) say += " And a very rare visitor has arrived: the " + rare.name + "!";
+  else if (newNames.length) say += " You discovered the " + newNames.join(" and the ") + "!";
+  speak(say);
+  if (score >= 5) sFanfare();
+  $("answers").innerHTML =
+    '<div class="endmsg">' + catchLine + '</div>' +
+    (uniq.length ? '<div class="endsummary">' + uniq.map(id => {
+      const isNew = roundNew.includes(id);
+      return '<div class="mini">' + cardSVG(SP[id]) + '<br>' + (isNew ? "✨ NEW!<br>" : "") + SP[id].name + '</div>';
+    }).join("") + '</div>' : '') +
+    '<button class="ans-btn wide" id="again">Play again</button>' +
+    '<button class="ans-btn wide" id="toAlbum">🦋 Open your album</button>';
+  $("again").onclick = () => { sTap(); restart(); };
+  $("toAlbum").onclick = () => { sTap(); openAlbum(); };
+}
+function restart() {
+  qnum = 0; score = 0; roundNew = []; roundIds = [];
+  $("bfield").innerHTML = "";
+  setStars();
+  next();
+}
+
+/* ---------- album ---------- */
+function lockedHint(sp) {
+  if (sp.topic) return "Practise “" + MODES[sp.topic].label + "” to find this one!";
+  if (sp.t === "u") return "It visits children who keep practising…";
+  return "Catch 9 stars in one round to find this one!";
+}
+function flowerSVG(filled) {
+  let p = "";
+  for (let i = 0; i < 8; i++) {
+    p += '<ellipse cx="30" cy="13" rx="6.5" ry="11" transform="rotate(' + i * 45 + ' 30 30)" fill="' +
+         (i < filled ? "#e8638c" : "none") + '" stroke="#c98ca0" stroke-width="1.5"/>';
+  }
+  return '<svg viewBox="0 0 60 60">' + p + '<circle cx="30" cy="30" r="7" fill="#e8c84f"/></svg>';
+}
+function renderAlbum() {
+  $("albumTotal").textContent = totalCaught() + " butterflies caught altogether · " +
+    SPECIES.filter(sp => S.caught[sp.id] > 0).length + " of " + SPECIES.length + " species discovered";
+  $("albumGrid").innerHTML = SPECIES.map(sp => {
+    const n = S.caught[sp.id] || 0;
+    if (n > 0) {
+      return '<div class="card" data-sp="' + sp.id + '">' + cardSVG(sp) +
+        (sp.t === "r" ? '<div class="badge">★ RARE</div>' : "") +
+        '<div class="nm">' + sp.name + '</div><div class="ct">caught ×' + n + '</div></div>';
+    }
+    return '<div class="card locked" data-sp="' + sp.id + '">' + cardSVG(sp, true) +
+      '<div class="nm">???</div><div class="ct">' + lockedHint(sp) + '</div></div>';
+  }).join("");
+  document.querySelectorAll("#albumGrid .card").forEach(c => {
+    c.onclick = () => {
+      const sp = SP[c.dataset.sp];
+      const svg = c.querySelector("svg");
+      svg.classList.remove("flap");
+      void svg.getBoundingClientRect();
+      svg.classList.add("flap");
+      if (S.caught[sp.id] > 0) { sTap(); speak("The " + sp.name + ". " + sp.fact); }
+      else { sTap(); speak("A mystery butterfly! " + lockedHint(sp)); }
+    };
+  });
+  $("meters").innerHTML = Object.entries(MODES).map(([id, m]) => {
+    const c = (S.topics[id] || {}).correct || 0;
+    return '<div class="meter">' + flowerSVG(Math.min(8, Math.floor(c / 5))) + '<br>' + m.label + '</div>';
+  }).join("");
+}
+function openAlbum() {
+  renderAlbum();
+  $("albumPage").classList.remove("hidden");
+}
+$("albumBtn").onclick = () => { sTap(); openAlbum(); };
+$("albumClose").onclick = () => { sTap(); $("albumPage").classList.add("hidden"); };
+
+/* ---------- grown-ups ---------- */
+function renderGrown() {
+  const rows = Object.entries(MODES).map(([id, m]) => {
+    const st = S.topics[id];
+    if (!st || !st.asked) return "";
+    const pct = Math.round(100 * st.correct / st.asked);
+    return "<tr><td>" + m.label + " (Y" + m.year + ")</td><td>" + st.asked + "</td><td>" + st.correct + "</td><td>" + pct + "%</td></tr>";
+  }).join("");
+  const missed = [];
+  for (const [id, st] of Object.entries(S.topics)) {
+    for (const k of Object.keys(st.missed || {})) {
+      missed.push({ t: st.missed[k].t, n: st.missed[k].n, m: MODES[id] ? MODES[id].label : id });
+    }
+  }
+  missed.sort((a, b) => b.n - a.n);
+  $("grownContent").innerHTML =
+    '<p>Rounds played: <strong>' + S.rounds + '</strong> · Butterflies caught: <strong>' + totalCaught() + '</strong></p>' +
+    '<h3 class="sect">Accuracy by topic</h3>' +
+    (rows ? '<table class="stats"><tr><th>Topic</th><th>Answered</th><th>Correct</th><th>Accuracy</th></tr>' + rows + '</table>'
+          : '<p class="note">No questions answered yet.</p>') +
+    '<h3 class="sect">Tricky questions (asked again until she gets them right)</h3>' +
+    (missed.length ? '<ul>' + missed.slice(0, 5).map(x => "<li><strong>" + x.t + "</strong> (" + x.m + ") — missed " + x.n + "×</li>").join("") + '</ul>'
+                   : '<p class="note">Nothing outstanding — all caught up!</p>') +
+    '<h3 class="sect">Child’s name (used in spoken praise)</h3>' +
+    '<input id="grownName" maxlength="20" placeholder="e.g. Amara"> <button class="gbtn" id="nameSave">Save</button>' +
+    '<h3 class="sect">Voice</h3>' +
+    '<div id="voiceQuick"></div>' +
+    '<select id="voiceSel"></select> <button class="gbtn" id="voiceTest">Hear it</button>' +
+    '<p class="note">Voices come from the device itself. On an iPad you can install much nicer ones first: Settings → Accessibility → Spoken Content → Voices → English (UK) — “Kate”, “Serena” or “Martha” are lovely. They appear in this list once downloaded.</p>' +
+    '<h3 class="sect">Data</h3>' +
+    '<p class="note">Everything is stored only on this device (localStorage). No accounts, no internet, nothing leaves the tablet.</p>' +
+    '<button class="gbtn danger" id="resetBtn">Start completely fresh…</button>';
+  $("grownName").value = S.name || "";
+  $("nameSave").onclick = () => {
+    S.name = $("grownName").value.trim();
+    saveState();
+    speak(S.name ? "Hello, " + S.name + "!" : "Name cleared.");
+  };
+  const voices = ("speechSynthesis" in window)
+    ? speechSynthesis.getVoices().filter(v => /en[-_](GB|US)/i.test(v.lang)).sort((a, b) => scoreVoice(b) - scoreVoice(a))
+    : [];
+  const markQuick = () => document.querySelectorAll(".vq").forEach(x => {
+    const on = S.settings.voiceName
+      ? x.dataset.v === S.settings.voiceName && x.dataset.s === (S.settings.voiceStyle || "")
+      : !!voiceObj && x.dataset.v === voiceObj.name && !x.dataset.s;
+    x.classList.toggle("on", on);
+  });
+  const fem = bestFemaleVoice();
+  const pills = (fem ? PERSONAS.map(p => ({ v: fem.name, s: p.id, label: p.label })) : [])
+    .concat(voices.filter(v => !NOVELTY.test(v.name)).slice(0, 4)
+      .map(v => ({ v: v.name, s: "", label: v.name + " · " + v.lang })));
+  $("voiceQuick").innerHTML = pills.map(pl =>
+    '<button class="vq" data-v="' + pl.v.replace(/"/g, "&quot;") + '" data-s="' + pl.s + '">' + pl.label + "</button>").join("");
+  document.querySelectorAll(".vq").forEach(b => b.onclick = () => {
+    S.settings.voiceName = b.dataset.v;
+    S.settings.voiceStyle = b.dataset.s;
+    saveState();
+    pickVoice();
+    markQuick();
+    $("voiceSel").value = b.dataset.v;
+    speak(vary("vqSample", ["Hello{n}! What is two add three?", "Hello{n}! Brilliant! You caught a Peacock.", "Well done{n}! Shall we catch some butterflies?"]).replace("{n}", nameBit()));
+  });
+  markQuick();
+  $("voiceSel").innerHTML =
+    '<option value="">Automatic (best available)</option>' +
+    voices.map(v => '<option value="' + v.name.replace(/"/g, "&quot;") + '"' +
+      (S.settings.voiceName === v.name ? " selected" : "") + '>' +
+      v.name + " — " + v.lang + (NOVELTY.test(v.name) ? " (robot!)" : "") + '</option>').join("");
+  $("voiceSel").onchange = () => {
+    S.settings.voiceName = $("voiceSel").value;
+    S.settings.voiceStyle = "";
+    saveState();
+    pickVoice();
+    markQuick();
+    speak("Hello" + nameBit() + "! What is two add three?");
+  };
+  $("voiceTest").onclick = () => speak("Hello" + nameBit() + "! Brilliant! You caught a Red Admiral.");
+  $("resetBtn").onclick = () => {
+    if (confirm("Erase the whole album, all progress and the name? This cannot be undone.")) {
+      try { localStorage.removeItem("hk_state"); } catch (e) {}
+      location.reload();
+    }
+  };
+}
+$("grownLink").onclick = () => {
+  $("gateIn").value = "";
+  $("gateMsg").textContent = "";
+  $("gate").style.display = "";
+  $("grownContent").style.display = "none";
+  $("grownPage").classList.remove("hidden");
+};
+$("gateBtn").onclick = () => {
+  if (+$("gateIn").value === 56) {
+    $("gate").style.display = "none";
+    renderGrown();
+    $("grownContent").style.display = "";
+  } else {
+    $("gateMsg").textContent = "Not quite — try again.";
+  }
+};
+$("grownClose").onclick = () => $("grownPage").classList.add("hidden");
+
+/* ---------- toggles & repeat ---------- */
+function applySettings() {
+  $("soundBtn").textContent = "Sound: " + (S.settings.sound ? "on" : "off");
+  $("soundBtn").setAttribute("aria-pressed", String(S.settings.sound));
+  $("voiceBtn").textContent = "Voice: " + (S.settings.voice ? "on" : "off");
+  $("voiceBtn").setAttribute("aria-pressed", String(S.settings.voice));
+}
+$("soundBtn").onclick = () => {
+  S.settings.sound = !S.settings.sound;
+  saveState(); applySettings();
+  if (S.settings.sound) sTap();
+};
+$("voiceBtn").onclick = () => {
+  S.settings.voice = !S.settings.voice;
+  saveState(); applySettings();
+  if (S.settings.voice) speak("Voice on!");
+  else { try { speechSynthesis.cancel(); } catch (e) {} }
+};
+const repeatQ = () => { if (q && !locked) speak(q.say); };
+$("question").onclick = repeatQ;
+$("picture").onclick = repeatQ;
+
+/* ---------- go ---------- */
+buildModes();
+setStars();
+setFooter();
+applySettings();
+next();
+// offline copy for the iPad home-screen app (only on https hosting; harmless elsewhere)
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+</script>
+</body>
+</html>
