@@ -531,23 +531,23 @@ function cardSVG(sp, sil) {
 /* ---------- treasure collections (unlock after all the butterflies) ---------- */
 const STARP = "M0 -16 L4.7 -4.9 L16.5 -4.2 L7.4 3.4 L10.2 14.8 L0 8.4 L-10.2 14.8 L-7.4 3.4 L-16.5 -4.2 L-4.7 -4.9 Z";
 const TREASURES = [
-  { id: "t_moon", name: "Smiling Moon", coll: "sky", t: "c", fact: "The Moon tugs the sea to make the tides dance!" },
-  { id: "t_star", name: "Twinkle Star", coll: "sky", t: "c", fact: "Stars twinkle because their light wibbles and wobbles through the air." },
-  { id: "t_shooting", name: "Shooting Star", coll: "sky", t: "c", fact: "Quick — make a wish!" },
-  { id: "t_comet", name: "Comet", coll: "sky", t: "c", fact: "A giant snowball in space with a tail a million miles long!" },
-  { id: "t_venus", name: "Venus", coll: "sky", t: "c", fact: "The hottest planet of all — hotter than any oven!" },
-  { id: "t_earth", name: "Earth", coll: "sky", t: "c", fact: "Our home — the only planet with butterflies!" },
-  { id: "t_mars", name: "Mars", coll: "sky", t: "c", fact: "The red planet has the biggest volcano in the whole solar system." },
+  { id: "t_moon", name: "Smiling Moon", coll: "sky", t: "c", topic: "x2", fact: "The Moon tugs the sea to make the tides dance!" },
+  { id: "t_star", name: "Twinkle Star", coll: "sky", t: "c", topic: "x5", fact: "Stars twinkle because their light wibbles and wobbles through the air." },
+  { id: "t_shooting", name: "Shooting Star", coll: "sky", t: "c", topic: "x10", fact: "Quick — make a wish!" },
+  { id: "t_comet", name: "Comet", coll: "sky", t: "c", topic: "add", fact: "A giant snowball in space with a tail a million miles long!" },
+  { id: "t_venus", name: "Venus", coll: "sky", t: "c", topic: "sub", fact: "The hottest planet of all — hotter than any oven!" },
+  { id: "t_earth", name: "Earth", coll: "sky", t: "c", topic: "div", fact: "Our home — the only planet with butterflies!" },
+  { id: "t_mars", name: "Mars", coll: "sky", t: "c", topic: "miss", fact: "The red planet has the biggest volcano in the whole solar system." },
   { id: "t_saturn", name: "Saturn", coll: "sky", t: "r", fact: "Saturn's beautiful rings are made of sparkling ice!" },
   { id: "t_jupiter", name: "Jupiter", coll: "sky", t: "r", fact: "So big that one thousand Earths could fit inside!" },
   { id: "t_rocket", name: "Rocket", coll: "sky", t: "r", fact: "Three… two… one… BLAST OFF!" },
-  { id: "t_rainbow", name: "Rainbow", coll: "magic", t: "c", fact: "Sunshine and rain together make a bridge of colours." },
-  { id: "t_crown", name: "Golden Crown", coll: "magic", t: "c", fact: "Fit for the queen of the meadow — that's you!" },
-  { id: "t_wand", name: "Magic Wand", coll: "magic", t: "c", fact: "Swish and flick! Every good spell starts with maths." },
-  { id: "t_toadstool", name: "Fairy Toadstool", coll: "magic", t: "c", fact: "Fairies use them as little red umbrellas." },
-  { id: "t_potion", name: "Magic Potion", coll: "magic", t: "c", fact: "A fizzy potion of moonlight and berry juice!" },
-  { id: "t_hat", name: "Wizard's Hat", coll: "magic", t: "c", fact: "A pointy hat simply full of star secrets." },
-  { id: "t_egg", name: "Dragon Egg", coll: "magic", t: "c", fact: "Shhh… something magical is sleeping inside." },
+  { id: "t_rainbow", name: "Rainbow", coll: "magic", t: "c", topic: "pv", fact: "Sunshine and rain together make a bridge of colours." },
+  { id: "t_crown", name: "Golden Crown", coll: "magic", t: "c", topic: "frac", fact: "Fit for the queen of the meadow — that's you!" },
+  { id: "t_wand", name: "Magic Wand", coll: "magic", t: "c", topic: "x3", fact: "Swish and flick! Every good spell starts with maths." },
+  { id: "t_toadstool", name: "Fairy Toadstool", coll: "magic", t: "c", topic: "x4", fact: "Fairies use them as little red umbrellas." },
+  { id: "t_potion", name: "Magic Potion", coll: "magic", t: "c", topic: "x8", fact: "A fizzy potion of moonlight and berry juice!" },
+  { id: "t_hat", name: "Wizard's Hat", coll: "magic", t: "c", topic: "add2", fact: "A pointy hat simply full of star secrets." },
+  { id: "t_egg", name: "Dragon Egg", coll: "magic", t: "c", topic: "sub2", fact: "Shhh… something magical is sleeping inside." },
   { id: "t_unicorn", name: "Unicorn", coll: "magic", t: "r", fact: "The rarest friend of all — she only visits the cleverest mathematicians!" },
   { id: "t_fairy", name: "Fairy", coll: "magic", t: "r", fact: "She sprinkles sparkle dust on children who keep on trying." },
   { id: "t_chest", name: "Treasure Chest", coll: "magic", t: "r", fact: "Full of golden coins — and golden answers!" }
@@ -1006,11 +1006,11 @@ function awardCatch() {
     const st = topicStat(mode);
     if (st.correct >= 15 && Math.random() < 0.25) ids.push(WANDERERS[rnd(0, 1)]);
   } else {
-    // a NEW treasure roughly every 3rd correct answer keeps the hunt going for days
-    const commons = TREASURES.filter(t => t.coll === coll && t.t === "c");
-    const fresh = commons.filter(t => !(S.caught[t.id] > 0));
-    if (fresh.length && Math.random() < 0.35) ids.push(fresh[rnd(0, fresh.length - 1)].id);
-    else if (Math.random() < 0.5) ids.push(commons[rnd(0, commons.length - 1)].id);
+    // each common treasure belongs to a topic, like the butterflies: practise it to find it
+    const tTopic = TREASURES.find(t => t.coll === coll && t.topic === mode);
+    const owned = TREASURES.filter(t => t.coll === coll && S.caught[t.id] > 0);
+    if (tTopic && !(S.caught[tTopic.id] > 0) && Math.random() < 0.4) ids.push(tTopic.id);
+    else if (owned.length && Math.random() < 0.5) ids.push(owned[rnd(0, owned.length - 1)].id);
     else ids.push(SPECIES[rnd(0, SPECIES.length - 1)].id); // an old butterfly friend visits
   }
   const news = [];
@@ -1381,7 +1381,9 @@ function renderAlbum() {
     };
   });
   // treasure pages: visible once the previous collection is complete, teased before
-  const tHint = t => t.t === "r" ? "Catch 9 stars in one round to find this one!" : "Keep answering questions — it will appear like magic!";
+  const tHint = t => t.t === "r" ? "Catch 9 stars in one round to find this one!"
+    : t.topic ? "Practise “" + MODES[t.topic].label + "” to find this one!"
+    : "Keep answering questions — it will appear like magic!";
   const ticon = { sky: "🌙", magic: "🦄" };
   let th = "";
   for (const [cid, prev] of [["sky", "bfly"], ["magic", "sky"]]) {
