@@ -48,6 +48,9 @@ main { max-width: 560px; width: 100%; margin: 0 auto; padding: 4px 18px 0; flex:
 .ylabel { flex: 0 0 36px; font-size: 11px; font-weight: 700; color: #a08f6e; text-transform: uppercase; letter-spacing: 0.04em; text-align: center; line-height: 1.15; }
 .chips { display: flex; flex-wrap: nowrap; gap: 7px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 3px 2px; flex: 1; }
 .chips::-webkit-scrollbar { display: none; }
+.chips.moreR { -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 34px), transparent); mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 34px), transparent); }
+.chips.moreL { -webkit-mask-image: linear-gradient(90deg, transparent, #000 34px); mask-image: linear-gradient(90deg, transparent, #000 34px); }
+.chips.moreL.moreR { -webkit-mask-image: linear-gradient(90deg, transparent, #000 34px, #000 calc(100% - 34px), transparent); mask-image: linear-gradient(90deg, transparent, #000 34px, #000 calc(100% - 34px), transparent); }
 .mode-btn {
   flex: 0 0 auto;
   font-size: 14px;
@@ -537,6 +540,39 @@ function shareSVG(a, n) {
   return '<svg viewBox="0 0 ' + w + ' ' + h + '" style="height:' + Math.min(96, h * 1.6) + 'px">' + c + '</svg>';
 }
 
+function appleG(cx, cy, fill, stroke) {
+  return '<circle cx="' + cx + '" cy="' + cy + '" r="7.5" fill="' + fill + '" stroke="' + stroke + '" stroke-width="1.5"/>' +
+         '<path d="M' + cx + " " + (cy - 7) + " Q " + (cx + 1) + " " + (cy - 11) + " " + (cx + 4) + " " + (cy - 12) +
+         '" stroke="#6b8f3c" stroke-width="2" fill="none" stroke-linecap="round"/>';
+}
+function addPicSVG(a, b) {
+  const cols = n => Math.min(n, 5), rows = n => Math.ceil(n / 5);
+  let s = "";
+  for (let i = 0; i < a; i++) s += appleG(13 + (i % 5) * 19, 18 + Math.floor(i / 5) * 21, "#d9534f", "#9e3a36");
+  const xb = 13 + cols(a) * 19 + 10;
+  const h = 8 + Math.max(rows(a), rows(b)) * 21;
+  s += '<text x="' + (xb - 12) + '" y="' + (h / 2 + 7) + '" font-size="18" font-weight="700" fill="#5a4a2f">+</text>';
+  for (let i = 0; i < b; i++) s += appleG(xb + 10 + (i % 5) * 19, 18 + Math.floor(i / 5) * 21, "#8db84e", "#5f8a33");
+  const w = xb + 12 + cols(b) * 19;
+  return '<svg viewBox="0 0 ' + w + " " + h + '" style="height:' + Math.min(88, h * 1.8) + 'px">' + s + '</svg>';
+}
+function biscuitG(cx, cy, eaten) {
+  let s = '<g' + (eaten ? ' opacity="0.32"' : "") + '><circle cx="' + cx + '" cy="' + cy + '" r="8" fill="#d8a35a" stroke="#a8763c" stroke-width="1.5"/>' +
+    '<circle cx="' + (cx - 3) + '" cy="' + (cy - 2) + '" r="1.6" fill="#6b4226"/>' +
+    '<circle cx="' + (cx + 3) + '" cy="' + (cy - 1) + '" r="1.6" fill="#6b4226"/>' +
+    '<circle cx="' + cx + '" cy="' + (cy + 3.5) + '" r="1.6" fill="#6b4226"/></g>';
+  if (eaten) s += '<path d="M' + (cx - 6) + " " + (cy - 6) + " L" + (cx + 6) + " " + (cy + 6) +
+                  " M" + (cx + 6) + " " + (cy - 6) + " L" + (cx - 6) + " " + (cy + 6) +
+                  '" stroke="#b34a37" stroke-width="2.5" stroke-linecap="round"/>';
+  return s;
+}
+function subPicSVG(a, b) {
+  let s = "";
+  for (let i = 0; i < a; i++) s += biscuitG(13 + (i % 6) * 20, 14 + Math.floor(i / 6) * 21, i >= a - b);
+  const w = 7 + Math.min(a, 6) * 20, h = 6 + Math.ceil(a / 6) * 21;
+  return '<svg viewBox="0 0 ' + w + " " + h + '" style="height:' + Math.min(88, h * 1.8) + 'px">' + s + '</svg>';
+}
+
 /* ---------- question generators ---------- */
 function numOptions(correct, pool) {
   const opts = [String(correct)];
@@ -559,7 +595,15 @@ const MODES = {
   x5: tableMode(5, 2, "common_blue", "5 times"),
   x10: tableMode(10, 2, "brimstone", "10 times"),
   add: { label: "Adding", year: 2, sp: "red_admiral", gen(p) {
-    const kind = p ? p.kind : (Math.random() < 0.3 ? "tens" : "ones");
+    const kind = p ? p.kind : (r => r < 0.35 ? "pic" : r < 0.55 ? "tens" : "ones")(Math.random());
+    if (kind === "pic") {
+      const a = p ? p.a : rnd(3, 10), b = p ? p.b : rnd(2, 10);
+      const c = a + b;
+      return { p: { kind, a, b }, text: a + " + " + b + " = ?",
+               say: "Count the apples! " + cap(words(a)) + " red apples add " + words(b) + " green apples. How many apples altogether?",
+               correct: String(c), options: numOptions(c, [c - 1, c + 1, c + 2, c - 2, a, b]),
+               picture: addPicSVG(a, b) };
+    }
     const a = p ? p.a : (kind === "tens" ? rnd(11, 69) : rnd(11, 89));
     const b = p ? p.b : (kind === "tens" ? rnd(1, Math.floor((99 - a) / 10)) * 10 : rnd(2, 9));
     const c = a + b;
@@ -567,7 +611,15 @@ const MODES = {
              correct: String(c), options: numOptions(c, [c - 1, c + 1, c + 10, c - 10, c + 2]) };
   } },
   sub: { label: "Taking away", year: 2, sp: "tortoiseshell", gen(p) {
-    const kind = p ? p.kind : (Math.random() < 0.3 ? "tens" : "ones");
+    const kind = p ? p.kind : (r => r < 0.35 ? "pic" : r < 0.55 ? "tens" : "ones")(Math.random());
+    if (kind === "pic") {
+      const a = p ? p.a : rnd(5, 12), b = p ? p.b : rnd(2, a - 2);
+      const c = a - b;
+      return { p: { kind, a, b }, text: a + " − " + b + " = ?",
+               say: "There were " + words(a) + " biscuits, and " + words(b) + " got nibbled! How many biscuits are left?",
+               correct: String(c), options: numOptions(c, [c - 1, c + 1, c + 2, b, a]),
+               picture: subPicSVG(a, b) };
+    }
     const a = p ? p.a : (kind === "tens" ? rnd(31, 99) : rnd(11, 99));
     const b = p ? p.b : (kind === "tens" ? rnd(1, Math.min(3, Math.floor((a - 1) / 10))) * 10 : rnd(2, 9));
     const c = a - b;
@@ -731,8 +783,19 @@ function buildModes() {
   });
   const on = document.querySelector(".mode-btn.on");
   if (on && on.scrollIntoView) on.scrollIntoView({ inline: "center", block: "nearest" });
+  document.querySelectorAll(".chips").forEach(el => {
+    el.addEventListener("scroll", () => updateChipFades(), { passive: true });
+  });
+  updateChipFades();
   updateDots();
 }
+function updateChipFades() {
+  document.querySelectorAll(".chips").forEach(el => {
+    el.classList.toggle("moreR", el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+    el.classList.toggle("moreL", el.scrollLeft > 4);
+  });
+}
+window.addEventListener("resize", updateChipFades);
 function updateDots() {
   for (const id of Object.keys(MODES)) {
     const el = $("dot-" + id);
@@ -743,20 +806,36 @@ function updateDots() {
 }
 
 /* ---------- catching butterflies ---------- */
-function addToMeadow(spId) {
+function addToMeadow(spId, opts = {}) {
   // land on the grass band: stays visible however the meadow is cropped on small/wide screens
   const x = rnd(120, 560), y = rnd(84, 146), s = (0.6 + Math.random() * 0.45).toFixed(2), r = rnd(-25, 25);
   const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
   g.innerHTML = bflySVG(SP[spId]);
   g.classList.add("flying");
-  const fromLeft = x < 340;
-  g.style.transform = "translate(" + (fromLeft ? -70 : 750) + "px, " + rnd(-15, 25) + "px) rotate(" + (fromLeft ? 25 : -25) + "deg) scale(" + s + ")";
-  g.style.transition = "transform 1.5s cubic-bezier(.5,.1,.4,1)";
-  $("bfield").appendChild(g);
+  let sx, sy, sr;
+  if (opts.fromAlbum) { sx = rnd(620, 740); sy = -60; sr = -35; } // swoop down from the Album button
+  else { const fromLeft = x < 340; sx = fromLeft ? -70 : 750; sy = rnd(-15, 25); sr = fromLeft ? 25 : -25; }
+  g.style.transform = "translate(" + sx + "px, " + sy + "px) rotate(" + sr + "deg) scale(" + s + ")";
+  g.style.transition = "transform " + (opts.fromAlbum ? 1.9 : 1.5) + "s cubic-bezier(.5,.1,.4,1)";
+  const f = $("bfield");
+  f.appendChild(g);
+  while (f.children.length > 24) f.removeChild(f.firstChild);
   requestAnimationFrame(() => requestAnimationFrame(() => {
     g.style.transform = "translate(" + x + "px, " + y + "px) rotate(" + r + "deg) scale(" + s + ")";
   }));
-  setTimeout(() => g.classList.remove("flying"), 1600);
+  setTimeout(() => g.classList.remove("flying"), opts.fromAlbum ? 2000 : 1600);
+}
+// her collection flies out of the album into the field
+let populateTimers = [];
+function populateMeadow() {
+  populateTimers.forEach(clearTimeout);
+  populateTimers = [];
+  const ids = shuffle(Object.keys(S.caught).filter(id => S.caught[id] > 0 && SP[id]));
+  if (!ids.length) return;
+  const total = Object.values(S.caught).reduce((a, b) => a + b, 0);
+  const picks = ids.slice(0, 20);
+  while (picks.length < Math.min(6, total)) picks.push(ids[picks.length % ids.length]);
+  picks.forEach((id, i) => populateTimers.push(setTimeout(() => addToMeadow(id, { fromAlbum: true }), 150 + i * 280)));
 }
 // every few seconds one resting butterfly flutters its wings
 setInterval(() => {
@@ -934,6 +1013,7 @@ function end() {
 function restart() {
   qnum = 0; score = 0; roundNew = []; roundIds = [];
   $("bfield").innerHTML = "";
+  populateMeadow();
   setStars();
   next();
 }
@@ -1117,6 +1197,7 @@ buildModes();
 setStars();
 setFooter();
 applySettings();
+populateMeadow();
 next();
 // offline copy for the iPad home-screen app (only on https hosting; harmless elsewhere)
 if ("serviceWorker" in navigator && location.protocol === "https:") {
