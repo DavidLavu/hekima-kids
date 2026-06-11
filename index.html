@@ -925,7 +925,8 @@ function coinSVG1(v, x) {
     wording;
 }
 function noteSVG1(v, x) {
-  const col = v === 500 ? ["#aedce0", "#3f93a3", "Five"] : v === 1000 ? ["#ecd0ac", "#b8804a", "Ten"] : ["#ddc7ec", "#8f62b3", "Twenty"];
+  const col = v === 500 ? ["#aedce0", "#3f93a3", "Five"] : v === 1000 ? ["#ecd0ac", "#b8804a", "Ten"]
+            : v === 2000 ? ["#ddc7ec", "#8f62b3", "Twenty"] : ["#f2c6be", "#bc4a52", "Fifty"];
   const lbl = "£" + v / 100;
   return '<rect x="' + (x - 31) + '" y="-19" width="62" height="38" rx="4" fill="' + col[0] + '" stroke="' + col[1] + '" stroke-width="1.5"/>' +
     // wavy guilloché-style background lines
@@ -958,6 +959,10 @@ const COIN_DESC = {
   1: "small copper penny", 2: "big copper two pence", 5: "tiny silver five pence",
   10: "big silver ten pence", 20: "small seven-sided twenty pence", 50: "big seven-sided fifty pence",
   100: "golden one pound coin", 200: "two-coloured two pound coin"
+};
+const MONEY_NAME = {
+  1: "one penny", 2: "two pence", 5: "five pence", 10: "ten pence", 20: "twenty pence", 50: "fifty pence",
+  100: "one pound", 200: "two pounds", 500: "five pounds", 1000: "ten pounds", 2000: "twenty pounds", 5000: "fifty pounds"
 };
 function clockSVG(hr, mm) {
   const ha = (hr % 12) * 30 + mm * 0.5, ma = mm * 6;
@@ -1972,8 +1977,26 @@ function renderAlbum() {
       return '<div class="card locked" data-t="' + t.id + '">' + anyCardSVG(t.id, true) +
         '<div class="nm">???</div><div class="ct">' + tHint(t) + '</div></div>';
     }).join("") + '</div>';
+  // British money word mat: a classroom-style reference she can tap and hear
+  th += '<h3 class="sect">💷 British money mat</h3><p class="note">Tap a coin or note to hear its name.</p><div class="tgrid">' +
+    [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000].map(v =>
+      '<div class="card" data-mny="' + v + '">' + moneySVG([v]) +
+      '<div class="nm">' + (v >= 100 ? "£" + v / 100 : v + "p") + '</div><div class="ct">' + MONEY_NAME[v] + '</div></div>'
+    ).join("") + '</div>';
   $("treasureSects").innerHTML = th;
+  document.querySelectorAll("#treasureSects .card[data-mny]").forEach(c => {
+    c.onclick = () => {
+      const v = parseInt(c.dataset.mny);
+      const svg = c.querySelector("svg");
+      svg.classList.remove("wig");
+      void svg.getBoundingClientRect();
+      svg.classList.add("wig");
+      sTap();
+      speak(MONEY_NAME[v] + "! " + (v < 500 ? "The " + COIN_DESC[v] + "." : "The " + MONEY_NAME[v] + " note."));
+    };
+  });
   document.querySelectorAll("#treasureSects .card").forEach(c => {
+    if (c.dataset.mny) return;
     c.onclick = () => {
       const t = TR[c.dataset.t];
       const svg = c.querySelector("svg");
