@@ -250,18 +250,7 @@ table.stats th { color: #a08f6e; font-weight: 600; font-size: 12px; }
   </g>
   <path d="M0 100 C 120 78 240 110 360 96 C 480 84 580 106 680 92 L680 170 L0 170 Z" fill="#7fb163"/>
   <path d="M0 128 C 150 112 300 138 460 124 C 560 115 620 128 680 120 L680 170 L0 170 Z" fill="#6a9c52"/>
-  <g stroke="#4e7d3c" stroke-width="3" fill="none" stroke-linecap="round">
-    <path d="M60 132 C 58 122 62 114 60 108"/>
-    <path d="M210 128 C 212 116 208 106 210 98"/>
-    <path d="M480 130 C 478 120 482 112 480 108"/>
-    <path d="M640 136 C 642 128 638 120 640 114"/>
-  </g>
-  <g>
-    <g transform="translate(60 102)"><circle cx="0" cy="-7" r="6" fill="#e6a4b8"/><circle cx="6.7" cy="-2.2" r="6" fill="#e6a4b8"/><circle cx="4.1" cy="5.7" r="6" fill="#e6a4b8"/><circle cx="-4.1" cy="5.7" r="6" fill="#e6a4b8"/><circle cx="-6.7" cy="-2.2" r="6" fill="#e6a4b8"/><circle r="4.5" fill="#f2c84b"/></g>
-    <g transform="translate(210 92)"><circle cx="0" cy="-7" r="6.5" fill="#e8c84f"/><circle cx="6.7" cy="-2.2" r="6.5" fill="#e8c84f"/><circle cx="4.1" cy="5.7" r="6.5" fill="#e8c84f"/><circle cx="-4.1" cy="5.7" r="6.5" fill="#e8c84f"/><circle cx="-6.7" cy="-2.2" r="6.5" fill="#e8c84f"/><circle r="4.5" fill="#c97b3d"/></g>
-    <g transform="translate(480 102)"><circle cx="0" cy="-7" r="6" fill="#f2e6c9"/><circle cx="6.7" cy="-2.2" r="6" fill="#f2e6c9"/><circle cx="4.1" cy="5.7" r="6" fill="#f2e6c9"/><circle cx="-4.1" cy="5.7" r="6" fill="#f2e6c9"/><circle cx="-6.7" cy="-2.2" r="6" fill="#f2e6c9"/><circle r="4.5" fill="#f2c84b"/></g>
-    <g transform="translate(640 112)"><circle cx="0" cy="-6" r="5" fill="#d4537e"/><circle cx="5.6" cy="-1.8" r="5" fill="#d4537e"/><circle cx="3.4" cy="4.8" r="5" fill="#d4537e"/><circle cx="-3.4" cy="4.8" r="5" fill="#d4537e"/><circle cx="-5.6" cy="-1.8" r="5" fill="#d4537e"/><circle r="3.8" fill="#f2c84b"/></g>
-  </g>
+  <g id="garden"></g>
   <circle cx="80" cy="132" r="4" fill="#f2e6c9"/><circle cx="162" cy="142" r="4" fill="#e6a4b8"/>
   <circle cx="300" cy="138" r="4" fill="#e8c84f"/><circle cx="452" cy="134" r="4" fill="#e6a4b8"/>
   <circle cx="560" cy="142" r="4" fill="#f2e6c9"/><circle cx="622" cy="130" r="4" fill="#e8c84f"/>
@@ -1158,6 +1147,41 @@ function addCaughtToScene(id, opts = {}) {
   if (SP[id]) addToMeadow(id, opts);
   else addTreasureToScene(id, opts);
 }
+// her learning garden grows in the meadow itself: one flower per topic,
+// a petal per 5 right answers; blooming at level 2, golden at level 3
+function renderGarden() {
+  const g = $("garden");
+  const ids = Object.keys(MODES);
+  g.innerHTML = ids.map((m, i) => {
+    const st = topicStat(m), lvl = topicLvl(m);
+    const petals = Math.min(8, Math.floor(st.correct / 5));
+    const x = 42 + i * (596 / (ids.length - 1));
+    const y = [130, 142, 136][i % 3];
+    const sc = lvl === 3 ? 1.15 : lvl === 2 ? 1 : 0.75;
+    const pc = lvl === 3 ? "#e8b73a" : "#e8638c";
+    const oc = lvl === 3 ? "#d9a93a" : "#c98ca0";
+    let ps = "";
+    for (let k = 0; k < 8; k++) {
+      ps += '<ellipse cx="0" cy="-8.5" rx="3.2" ry="5.5" transform="rotate(' + k * 45 + ')" fill="' +
+            (k < petals ? pc : "none") + '" stroke="' + oc + '" stroke-width="1.2"/>';
+    }
+    return '<g class="gflower" data-m="' + m + '" transform="translate(' + x.toFixed(1) + ' ' + y + ') scale(' + sc + ')">' +
+      '<path d="M0 17 C -1 11 1 6 0 0" stroke="#4e7d3c" stroke-width="2" fill="none"/>' +
+      ps + '<circle r="3.4" fill="#e8c84f"/></g>';
+  }).join("");
+  g.querySelectorAll(".gflower").forEach(f => {
+    f.onclick = () => {
+      const m = f.dataset.m, st = topicStat(m), lvl = topicLvl(m);
+      sTap();
+      speak("Your “" + MODES[m].label + "” flower! " + (
+        lvl === 3 ? "It is golden — you are a star at this!" :
+        lvl === 2 ? "It is blooming beautifully — " + words(st.correct) + " right answers!" :
+        st.correct > 0 ? "It is growing — " + words(st.correct) + " right answers so far!" :
+        "Help it grow by playing “" + MODES[m].label + "”!"));
+    };
+  });
+}
+
 // the meadow dresses for the season (date-based, no network)
 function dressMeadow() {
   const m = new Date().getMonth();
@@ -1511,6 +1535,7 @@ function resolveBad(custom) {
 }
 function finishQ() {
   topicStat(mode).last = dateStr();
+  renderGarden();
   saveState();
   setStars();
   setFooter();
@@ -1824,6 +1849,7 @@ $("picture").onclick = repeatQ;
 ensureQuest();
 renderQuest();
 dressMeadow();
+renderGarden();
 buildModes();
 setStars();
 setFooter();
