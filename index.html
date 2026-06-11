@@ -70,6 +70,9 @@ main > #msg { margin-bottom: auto; padding-bottom: 4px; }
 }
 .mode-btn .ic { font-size: 17px; line-height: 1; }
 .mode-btn.y3 { border-color: #e3c87e; }
+.mode-btn.yq { border-color: #a9c4dd; }
+.mode-btn.locked { opacity: 0.55; }
+.mode-btn .lock { margin-left: 2px; }
 .mode-btn.on { background: #4a7ba6; border-color: #4a7ba6; color: #fff; }
 .mode-btn .dot { width: 9px; height: 9px; border-radius: 50%; background: #e4dcc8; display: inline-block; }
 #stars { display: flex; gap: 7px; justify-content: center; margin: clamp(4px, 1.2vh, 10px) 0 4px; }
@@ -260,6 +263,9 @@ table.stats th { color: #a08f6e; font-weight: 600; font-size: 12px; }
   /* pictures (coins, clocks, fractions) grow to study size */
   #picture:has(> svg) { height: clamp(110px, 24vh, 250px); }
   #picture > svg { height: 100% !important; width: auto; max-width: 100%; }
+  /* column working: the sidebar-spanning grid mis-measures the stacked sum's
+     auto row, so the slots spilled over the digit pad — give the row its real height */
+  #picture:has(> #colwork) { height: calc(3 * clamp(40px, 6.4vh, 56px) + 40px); }
   #question { font-size: clamp(44px, 8vh, 72px); min-height: clamp(52px, 9vh, 84px); }
   #question.long { font-size: clamp(28px, 5.4vh, 46px); }
   .ans-btn { font-size: clamp(28px, 4.8vh, 44px); border-radius: 22px; }
@@ -735,7 +741,7 @@ function ensureQuest() {
   const all = TREASURES.filter(t => t.coll === "friends");
   const un = all.filter(t => !(S.caught[t.id] > 0));
   const friend = un.length ? un[seed % un.length] : all[seed % all.length];
-  const ranked = Object.keys(MODES).map(m => {
+  const ranked = Object.keys(MODES).filter(m => !MODES[m].quiz).map(m => {
     const st = topicStat(m);
     const acc = st.asked >= 5 ? st.correct / st.asked : -1; // barely-tried topics are neediest
     const fresh = st.last === today ? 0.15 : 0;             // played today already? less needy
@@ -761,7 +767,8 @@ function renderQuest() {
 }
 function questProgress() {
   const qd = S.quest;
-  if (!qd || qd.done || qd.date !== dateStr() || mode !== qd.topic) return;
+  const topic = (q && q.topic) || mode; // quiz questions count for their real topic
+  if (!qd || qd.done || qd.date !== dateStr() || topic !== qd.topic) return;
   qd.got++;
   if (qd.got >= qd.need) {
     qd.done = true;
@@ -1068,7 +1075,9 @@ function clockSVG(hr, mm) {
 /* ---------- question generators ---------- */
 // invisible difficulty 0 (gentle) → 1 (full stretch): grows with topic mastery,
 // ramps up through the round, and quietly eases after a miss. Never shown to the child.
+let quizH = null; // during a quiz question, difficulty is pinned by the quiz level
 function hardness() {
+  if (quizH != null) return quizH;
   const st = topicStat(mode);
   const mastery = Math.min(1, st.correct / 40);
   const ramp = Math.min(1, qnum / (TOTAL - 1));
@@ -1100,6 +1109,23 @@ function tableMode(n, year, sp, label) {
     const c = a * n;
     return { p: { a }, text: a + " × " + n + " = ?", say: "What is " + words(a) + " times " + words(n) + "?",
              correct: String(c), options: numOptions(c, [c - n, c + n, c - 1, c + 1, c + 10]) };
+  } };
+}
+// end-of-Year-2 quizzes: every question is borrowed from a Year 2 topic at a fixed
+// difficulty, so a round works like a friendly end-of-year check-up. A round visits
+// ten different topics (shuffled bag); 8+ stars clears the quiz and opens the next.
+const QUIZ_POOL = ["x2", "x5", "x10", "add", "sub", "div", "miss", "pv", "frac", "money", "time", "add2", "sub2"];
+let quizBag = [];
+function quizMode(n, h) {
+  return { label: "Quiz " + n, year: "q", quiz: true, gen(p) {
+    if (!p && !quizBag.length) quizBag = shuffle(QUIZ_POOL.slice());
+    const sub = p ? p.m : quizBag.pop();
+    quizH = h;
+    let qq;
+    try { qq = MODES[sub].gen(p ? p.p : undefined); } finally { quizH = null; }
+    qq.p = { m: sub, p: qq.p };
+    qq.topic = sub; // the butterfly, quest credit and shiny check follow the real topic
+    return qq;
   } };
 }
 const MODES = {
@@ -1336,10 +1362,7 @@ const MODES = {
              explain: "the clock says " + correct, sayExplain: "the clock says " + correct,
              picture: clockSVG(hr, mm) };
   } },
-  x3: tableMode(3, 3, "painted_lady", "3 times"),
-  x4: tableMode(4, 3, "speckled_wood", "4 times"),
-  x8: tableMode(8, 3, "gatekeeper", "8 times"),
-  add2: { label: "Big adding", year: 3, sp: "swallowtail", gen(p) {
+  add2: { label: "Big adding", year: 2, sp: "swallowtail", gen(p) {
     const h = hardness();
     let a = p ? p.a : rnd(12, 79), b = p ? p.b : rnd(11, 99 - a);
     // gentle: no carrying; expert: always a carry to practise
@@ -1353,7 +1376,7 @@ const MODES = {
              say: "What is " + words(a) + " add " + words(b) + "?",
              correct: String(c), options: numOptions(c, [c - 1, c + 1, c + 10, c - 10, c + 2]) };
   } },
-  sub2: { label: "Big taking away", year: 3, sp: "fritillary", gen(p) {
+  sub2: { label: "Big taking away", year: 2, sp: "fritillary", gen(p) {
     const h = hardness();
     let a = p ? p.a : rnd(25, 99), b = p ? p.b : rnd(11, a - 12);
     // gentle: no exchanging; expert: always an exchange to practise
@@ -1366,7 +1389,13 @@ const MODES = {
     return { p: { a, b }, col: { a, b, op: "−" }, text: a + " − " + b + " = ?",
              say: "What is " + words(a) + " take away " + words(b) + "?",
              correct: String(c), options: numOptions(c, [c - 1, c + 1, c + 10, c - 10, c - 2]) };
-  } }
+  } },
+  quiz1: quizMode(1, 0.12),
+  quiz2: quizMode(2, 0.5),
+  quiz3: quizMode(3, 0.85),
+  x3: tableMode(3, 3, "painted_lady", "3 times"),
+  x4: tableMode(4, 3, "speckled_wood", "4 times"),
+  x8: tableMode(8, 3, "gatekeeper", "8 times")
 };
 
 /* ---------- game state ---------- */
@@ -1403,20 +1432,33 @@ function setFooter() {
 }
 
 /* ---------- mode picker ---------- */
-const MODE_ICONS = { x2: "🐞", x5: "⭐", x10: "🌼", add: "🍎", sub: "🍪", div: "🍓", miss: "🕵️", pv: "🐊", frac: "🍰", money: "💰", time: "⏰", x3: "🎈", x4: "🍀", x8: "🕷️", add2: "🚀", sub2: "🎢" };
+const MODE_ICONS = { x2: "🐞", x5: "⭐", x10: "🌼", add: "🍎", sub: "🍪", div: "🍓", miss: "🕵️", pv: "🐊", frac: "🍰", money: "💰", time: "⏰", x3: "🎈", x4: "🍀", x8: "🕷️", add2: "🚀", sub2: "🎢", quiz1: "🥉", quiz2: "🥈", quiz3: "🥇" };
+// quizzes open one at a time: clear a quiz (8+ stars in a round) to open the next
+function quizCleared(id) { return (S.bestRound[id] || 0) >= 8; }
+function quizLocked(id) {
+  return id === "quiz2" ? !quizCleared("quiz1") : id === "quiz3" ? !quizCleared("quiz2") : false;
+}
 function buildModes() {
-  const groups = { 2: [], 3: [] };
+  const groups = { 2: [], q: [], 3: [] };
   for (const [id, m] of Object.entries(MODES)) groups[m.year].push([id, m]);
-  $("modes").innerHTML = [2, 3].map(y =>
-    '<div class="ygroup"><div class="ylabel">' + (y === 2 ? "Year 2" : "Year 3 ✨") + '</div><div class="chips">' +
-    groups[y].map(([id, m]) =>
-      '<button class="mode-btn' + (id === mode ? " on" : "") + (y === 3 ? " y3" : "") + '" data-m="' + id + '">' +
+  $("modes").innerHTML = [2, "q", 3].map(y =>
+    '<div class="ygroup"><div class="ylabel">' + (y === 2 ? "Year 2" : y === "q" ? "Y2 Quiz 🏅" : "Year 3 ✨") + '</div><div class="chips">' +
+    groups[y].map(([id, m]) => {
+      const locked = m.quiz && quizLocked(id);
+      return '<button class="mode-btn' + (id === mode ? " on" : "") + (y === 3 ? " y3" : "") + (y === "q" ? " yq" : "") + (locked ? " locked" : "") + '" data-m="' + id + '">' +
       '<span class="ic">' + (MODE_ICONS[id] || "🦋") + '</span>' +
-      m.label + '<span class="dot" id="dot-' + id + '"></span></button>').join("") +
+      m.label + (m.quiz && quizCleared(id) ? " ✓" : "") +
+      (locked ? '<span class="lock">🔒</span>' : '<span class="dot" id="dot-' + id + '"></span>') + '</button>';
+    }).join("") +
     '</div></div>').join("");
   document.querySelectorAll(".mode-btn").forEach(b => {
     b.onclick = () => {
       sTap();
+      if (b.classList.contains("locked")) {
+        const prev = b.dataset.m === "quiz3" ? "Quiz 2" : "Quiz 1";
+        speak("This quiz is still locked! Clear " + prev + " first — catch eight stars or more in one round.");
+        return;
+      }
       document.querySelectorAll(".mode-btn").forEach(x => x.classList.remove("on"));
       b.classList.add("on");
       mode = b.dataset.m;
@@ -1506,7 +1548,7 @@ function addCaughtToScene(id, opts = {}) {
 // a petal per 5 right answers; blooming at level 2, golden at level 3
 function renderGarden() {
   const g = $("garden");
-  const ids = Object.keys(MODES);
+  const ids = Object.keys(MODES).filter(m => !MODES[m].quiz);
   g.innerHTML = ids.map((m, i) => {
     const st = topicStat(m), lvl = topicLvl(m);
     const petals = Math.min(8, Math.floor(st.correct / 5));
@@ -1605,9 +1647,11 @@ function celebrate(item) {
 function awardCatch() {
   const coll = activeColl();
   const ids = [];
+  // in a quiz, the catch belongs to the topic the question came from
+  const topic = (q && q.topic) || mode;
   if (coll === "bfly") {
-    ids.push(MODES[mode].sp);
-    const st = topicStat(mode);
+    ids.push(MODES[topic].sp);
+    const st = topicStat(topic);
     if (st.correct >= 15 && Math.random() < 0.25) ids.push(WANDERERS[rnd(0, 1)]);
   } else {
     // treasures arrive IN ORDER, each tied to a topic; the final three of a page
@@ -1616,13 +1660,13 @@ function awardCatch() {
     const idx = nt ? TREASURES.filter(t => t.coll === coll && t.t === "c").indexOf(nt) : -1;
     const gated = nt && idx >= 4 && topicLvl(nt.topic) < 2;
     const owned = TREASURES.filter(t => t.coll === coll && S.caught[t.id] > 0);
-    if (nt && nt.topic === mode && !gated && Math.random() < 0.4) ids.push(nt.id);
+    if (nt && nt.topic === topic && !gated && Math.random() < 0.4) ids.push(nt.id);
     else if (owned.length && Math.random() < 0.5) ids.push(owned[rnd(0, owned.length - 1)].id);
     else ids.push(SPECIES[rnd(0, SPECIES.length - 1)].id); // an old butterfly friend visits
   }
   // caught at a golden flower (level 3)? it becomes a shiny
   S.shiny = S.shiny || {};
-  if (TR[ids[0]] && !(S.caught[ids[0]] > 0) && topicLvl(mode) >= 3) S.shiny[ids[0]] = true;
+  if (TR[ids[0]] && !(S.caught[ids[0]] > 0) && topicLvl(topic) >= 3) S.shiny[ids[0]] = true;
   const news = [];
   for (const id of ids) {
     const isNew = !(S.caught[id] > 0);
@@ -1910,6 +1954,7 @@ function finishQ() {
 function end() {
   clearTimeout(promptT);
   S.rounds++;
+  const firstClear = !!MODES[mode].quiz && score >= 8 && !quizCleared(mode);
   if (score > (S.bestRound[mode] || 0)) S.bestRound[mode] = score;
   let rare = null;
   if (score >= 9) rare = unlockRare();
@@ -1945,9 +1990,16 @@ function end() {
     catchLine += " 🌟 You have found EVERY butterfly — a secret new page has appeared in your album: " + COLL_NAME[coll] + "!";
     say += " And something AMAZING has happened" + nameBit() + ". You have found every single butterfly! So a secret new page has appeared in your album: " + COLL_NAME[coll] + "! Keep answering questions to fill it with wonders.";
   }
-  if (topicLvl(mode) > roundStartLvl) {
+  if (!MODES[mode].quiz && topicLvl(mode) > roundStartLvl) {
     catchLine += " 🌸 Your “" + MODES[mode].label + "” flower has grown!";
     say += " And listen to this: your " + MODES[mode].label + " flower has grown a whole new ring of petals" + nameBit() + " — you are getting stronger and stronger!";
+  }
+  if (firstClear) {
+    const nxt = mode === "quiz1" ? "quiz2" : mode === "quiz2" ? "quiz3" : null;
+    catchLine += " 🏅 You cleared " + MODES[mode].label + "!" + (nxt ? " " + MODES[nxt].label + " is now open!" : " You are a Year 2 champion!");
+    say += " And the most wonderful news" + nameBit() + ": you cleared " + MODES[mode].label + "!" +
+      (nxt ? " " + MODES[nxt].label + " is now open for you!" : " You have finished every quiz — you are a true Year 2 champion!");
+    buildModes();
   }
   speak(say);
   if (score >= 5) sFanfare();
@@ -1965,6 +2017,7 @@ function end() {
 let roundStartLvl = 1;
 function restart() {
   qnum = 0; score = 0; roundNew = []; roundIds = [];
+  quizBag = []; // each quiz round samples a fresh spread of topics
   roundStartLvl = topicLvl(mode);
   ensureQuest();
   renderQuest();
@@ -2093,7 +2146,7 @@ function renderAlbum() {
       else { sTap(); speak("A mystery treasure! " + tHint(t)); }
     };
   });
-  $("meters").innerHTML = Object.entries(MODES).map(([id, m]) => {
+  $("meters").innerHTML = Object.entries(MODES).filter(([, m]) => !m.quiz).map(([id, m]) => {
     const c = (S.topics[id] || {}).correct || 0;
     return '<div class="meter">' + flowerSVG(Math.min(8, Math.floor(c / 5))) + '<br>' + m.label + '</div>';
   }).join("");
@@ -2121,10 +2174,10 @@ function renderGrown() {
     const pct = Math.round(100 * st.correct / st.asked);
     const w = week(st);
     const wTxt = w.a ? Math.round(100 * w.c / w.a) + "% (" + w.a + ")" : "—";
-    return "<tr><td>" + m.label + " (Y" + m.year + ")</td><td>" + st.asked + "</td><td>" + st.correct + "</td><td>" + pct + "%</td><td>" + wTxt + "</td></tr>";
+    return "<tr><td>" + m.label + (m.quiz ? " (Y2 quiz)" : " (Y" + m.year + ")") + "</td><td>" + st.asked + "</td><td>" + st.correct + "</td><td>" + pct + "%</td><td>" + wTxt + "</td></tr>";
   }).join("");
   // needs-practice radar: weak accuracy, gone stale, or never tried
-  const radar = Object.entries(MODES).map(([id, m]) => {
+  const radar = Object.entries(MODES).filter(([, m]) => !m.quiz).map(([id, m]) => {
     const st = S.topics[id];
     if (!st || st.asked < 6) return { label: m.label, why: "barely tried yet", pri: 0 };
     const pct = Math.round(100 * st.correct / st.asked);
@@ -2139,7 +2192,7 @@ function renderGrown() {
   const allF = TREASURES.filter(t => t.coll === "friends");
   const unF = allF.filter(t => !(S.caught[t.id] > 0));
   const tomFriend = unF.length ? unF[tomSeed % unF.length] : allF[tomSeed % allF.length];
-  const ranked = Object.keys(MODES).map(m => {
+  const ranked = Object.keys(MODES).filter(m => !MODES[m].quiz).map(m => {
     const st = topicStat(m);
     const acc = st.asked >= 5 ? st.correct / st.asked : -1;
     return { m, score: acc };
