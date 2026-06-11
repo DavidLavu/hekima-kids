@@ -43,7 +43,11 @@ h1 { font-size: 22px; margin: 0; font-weight: 700; color: #5a4a2f; }
   cursor: pointer;
 }
 #hdrBtns { display: flex; gap: 6px; flex-wrap: wrap; }
-main { max-width: 560px; width: 100%; margin: 0 auto; padding: 4px 18px 0; flex: 1; min-height: 0; overflow-y: auto; }
+main { max-width: 560px; width: 100%; margin: 0 auto; padding: 4px 18px 0; flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; }
+main > * { flex: 0 0 auto; }
+/* the question block floats centred in whatever space the screen offers */
+main > #stars { margin-top: auto; }
+main > #msg { margin-bottom: auto; padding-bottom: 4px; }
 .ygroup { display: flex; align-items: center; gap: 6px; margin: 3px 0 0; }
 .ylabel { flex: 0 0 36px; font-size: 11px; font-weight: 700; color: #a08f6e; text-transform: uppercase; letter-spacing: 0.04em; text-align: center; line-height: 1.15; }
 .chips { display: flex; flex-wrap: nowrap; gap: 7px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 3px 2px; flex: 1; }
@@ -211,9 +215,31 @@ table.stats { border-collapse: collapse; width: 100%; font-size: 14px; }
 table.stats th, table.stats td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #e8e0cc; }
 table.stats th { color: #a08f6e; font-weight: 600; font-size: 12px; }
 .note { font-size: 12px; color: #a08f6e; }
+#question.long { font-size: clamp(22px, 4.6vh, 32px); }
 @media (max-width: 420px) {
   #question { font-size: 44px; }
+  #question.long { font-size: 26px; }
   .ans-btn { font-size: 27px; padding: 18px 0; }
+}
+/* computer screens: use the room — wider column, larger type, taller meadow */
+@media (min-width: 1100px) {
+  header { max-width: 920px; }
+  main, footer { max-width: 800px; }
+  #question { font-size: clamp(44px, 7.5vh, 68px); min-height: clamp(52px, 8.5vh, 80px); }
+  #question.long { font-size: clamp(28px, 5vh, 42px); }
+  .ans-btn { font-size: clamp(28px, 4.6vh, 42px); border-radius: 22px; }
+  .mode-btn { font-size: 15px; padding: 10px 16px; }
+  .mode-btn .ic { font-size: 19px; }
+  .ylabel { flex-basis: 42px; font-size: 12px; }
+  #quest { font-size: 15px; padding: 4px 16px 4px 7px; }
+  #quest svg { width: 31px; height: 31px; }
+  #qcount { font-size: 14px; }
+  .star { width: clamp(20px, 2.8vh, 28px); height: clamp(20px, 2.8vh, 28px); }
+  #msg { font-size: clamp(16px, 2.4vh, 21px); }
+  footer { font-size: 13px; }
+}
+@media (min-width: 1500px) {
+  #meadow { height: clamp(130px, 23vh, 280px); }
 }
 </style>
 </head>
@@ -1612,7 +1638,7 @@ function next() {
     document.querySelectorAll(".ans-btn").forEach(btn => { btn.onclick = () => colTap(btn); });
   } else {
     $("question").textContent = q.text;
-    $("question").style.fontSize = q.text.length > 12 ? "30px" : "52px";
+    $("question").classList.toggle("long", q.text.length > 12);
     $("picture").innerHTML = q.picture || "";
     $("answers").innerHTML = q.options.map(v =>
       '<button class="ans-btn' + (String(v).length > 6 ? " txt" : "") + '" data-v="' + v + '">' + v + "</button>").join("");
@@ -1859,7 +1885,7 @@ function end() {
              : score >= 5 ? vary("head5", ["Great trying!", "Well flown!", "Lovely effort!"])
              : vary("head0", ["Good practice!", "Keep going!", "Every try helps!"]);
   $("question").textContent = head;
-  $("question").style.fontSize = "44px";
+  $("question").classList.remove("long");
   $("msg").textContent = "";
   const coll = activeColl();
   let catchLine = coll === "bfly"
