@@ -173,6 +173,17 @@ svg.wig { animation: wig 0.7s ease; }
 #flyer .bob { animation: bob 1.2s ease-in-out infinite; display: block; }
 @keyframes flyx { from { transform: translateX(-18vw); } to { transform: translateX(112vw); } }
 @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-24px); } }
+/* round-end celebrations: her butterflies lift off (8+ stars); soft sparkle
+   blooms for the big moments. Short, gentle, never blocks the buttons. */
+.fpb { position: fixed; bottom: -10vh; z-index: 59; pointer-events: none; animation: flyup var(--d) ease-in-out both; }
+.fpb .sway { display: block; animation: sway 1.5s ease-in-out infinite; }
+@keyframes flyup { 0% { transform: translateY(0); opacity: 0; } 12% { opacity: 1; }
+  50% { transform: translateY(calc(-72vh + var(--peak))); }
+  86% { opacity: 1; } 100% { transform: translateY(-6vh); opacity: 0; } }
+@keyframes sway { 0%,100% { transform: translateX(-13px) rotate(-8deg); } 50% { transform: translateX(13px) rotate(8deg); } }
+.burst { position: fixed; z-index: 58; pointer-events: none; }
+.burst svg { display: block; animation: bloom 1.5s ease-out both; }
+@keyframes bloom { 0% { transform: scale(0.12); opacity: 0; } 18% { opacity: 1; } 100% { transform: scale(1); opacity: 0; } }
 
 /* overlays */
 .overlay { position: fixed; inset: 0; background: #fdf8ec; overflow-y: auto; z-index: 20; padding: 14px 18px 30px; }
@@ -1657,6 +1668,48 @@ function celebrate(item) {
   setTimeout(() => d.remove(), 4200);
   sUnlock();
 }
+// 8+ stars: her own caught butterflies rise from the meadow, swirl up and settle back
+function flypast() {
+  const owned = SPECIES.filter(s => S.caught[s.id] > 0);
+  if (!owned.length) return;
+  const n = Math.min(12, Math.max(6, owned.length));
+  for (let i = 0; i < n; i++) {
+    const sp = owned[i % owned.length];
+    const d = document.createElement("div");
+    d.className = "fpb";
+    d.style.left = rnd(3, 88) + "vw";
+    d.style.setProperty("--d", (2.1 + Math.random() * 1.1).toFixed(2) + "s");
+    d.style.setProperty("--peak", rnd(-6, 16) + "vh");
+    d.style.animationDelay = (Math.random() * 0.6).toFixed(2) + "s";
+    d.innerHTML = '<span class="sway" style="animation-delay:-' + (Math.random() * 1.5).toFixed(2) +
+      's"><svg class="flying" width="' + rnd(34, 58) + '" viewBox="-32 -32 64 58">' + bflySVG(sp) + '</svg></span>';
+    document.body.appendChild(d);
+    setTimeout(() => d.remove(), 4400);
+  }
+}
+// soft firework blooms in the sky for the rare moments — slow dot-rings, no flashing
+function sparkleBursts(big) {
+  const cols = ["#e8b73a", "#e8638c", "#7bc47f", "#6fa8dc", "#e6a4b8"];
+  for (let i = 0; i < (big ? 5 : 3); i++) {
+    setTimeout(() => {
+      const d = document.createElement("div");
+      d.className = "burst";
+      d.style.left = rnd(10, 78) + "vw";
+      d.style.top = rnd(6, 36) + "vh";
+      const c = cols[rnd(0, cols.length - 1)], r = rnd(32, 54);
+      let dots = "";
+      for (let k = 0; k < 10; k++) {
+        const a = k * Math.PI / 5;
+        dots += '<circle cx="' + (60 + r * Math.cos(a)).toFixed(1) + '" cy="' + (60 + r * Math.sin(a)).toFixed(1) +
+                '" r="' + (k % 2 ? 3 : 4.5) + '" fill="' + c + '"/>';
+      }
+      d.innerHTML = '<svg width="120" height="120" viewBox="0 0 120 120">' + dots + '</svg>';
+      document.body.appendChild(d);
+      play([[760 + rnd(0, 4) * 110, 0.09], [1280, 0.14]]);
+      setTimeout(() => d.remove(), 1700);
+    }, i * 360);
+  }
+}
 // returns the items caught this answer (new discoveries only)
 function awardCatch() {
   const coll = activeColl();
@@ -1998,7 +2051,8 @@ function end() {
   if (hatch) { catchLine += hatch.text; say += hatch.say; }
   // first time a collection page opens: make it a moment
   S.collSeen = S.collSeen || {};
-  if (coll !== "bfly" && !S.collSeen[coll]) {
+  const newPage = coll !== "bfly" && !S.collSeen[coll];
+  if (newPage) {
     S.collSeen[coll] = true;
     saveState();
     catchLine += " 🌟 You have found EVERY butterfly — a secret new page has appeared in your album: " + COLL_NAME[coll] + "!";
@@ -2017,6 +2071,8 @@ function end() {
   }
   speak(say);
   if (score >= 5) sFanfare();
+  if (score >= 8) flypast();
+  if (firstClear || newPage || rare) sparkleBursts(firstClear || newPage);
   $("answers").innerHTML =
     '<div class="endmsg">' + catchLine + '</div>' +
     (uniq.length ? '<div class="endsummary">' + uniq.map(id => {
