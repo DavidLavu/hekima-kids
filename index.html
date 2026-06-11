@@ -1132,6 +1132,9 @@ const MODES = {
   x2: tableMode(2, 2, "large_white", "2 times"),
   x5: tableMode(5, 2, "common_blue", "5 times"),
   x10: tableMode(10, 2, "brimstone", "10 times"),
+  x3: tableMode(3, 2, "painted_lady", "3 times"),
+  x4: tableMode(4, 2, "speckled_wood", "4 times"),
+  x8: tableMode(8, 2, "gatekeeper", "8 times"),
   add: { label: "Adding", year: 2, sp: "red_admiral", gen(p) {
     const kind = p ? p.kind : (r => r < 0.35 ? "pic" : r < 0.55 ? "tens" : "ones")(Math.random());
     const h = hardness();
@@ -1392,10 +1395,7 @@ const MODES = {
   } },
   quiz1: quizMode(1, 0.12),
   quiz2: quizMode(2, 0.5),
-  quiz3: quizMode(3, 0.85),
-  x3: tableMode(3, 3, "painted_lady", "3 times"),
-  x4: tableMode(4, 3, "speckled_wood", "4 times"),
-  x8: tableMode(8, 3, "gatekeeper", "8 times")
+  quiz3: quizMode(3, 0.85)
 };
 
 /* ---------- game state ---------- */
@@ -1441,7 +1441,7 @@ function quizLocked(id) {
 function buildModes() {
   const groups = { 2: [], q: [], 3: [] };
   for (const [id, m] of Object.entries(MODES)) groups[m.year].push([id, m]);
-  $("modes").innerHTML = [2, "q", 3].map(y =>
+  $("modes").innerHTML = [2, "q", 3].filter(y => groups[y].length).map(y =>
     '<div class="ygroup"><div class="ylabel">' + (y === 2 ? "Year 2" : y === "q" ? "Y2 Quiz 🏅" : "Year 3 ✨") + '</div><div class="chips">' +
     groups[y].map(([id, m]) => {
       const locked = m.quiz && quizLocked(id);
