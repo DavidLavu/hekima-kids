@@ -568,6 +568,15 @@ const SPECIES = [
   { id: "ringlet", name: "Ringlet", topic: "time", t: "c", fw: "#4a3f33", hw: "#544838",
     deco: [{ t: "eye", x: 18, y: -16, r: 3, c1: "#e8dca8", c2: "#33291f", c3: "#e8dca8" }, { t: "eye", x: 10, y: 12, r: 2.4, c1: "#e8dca8", c2: "#33291f", c3: "#e8dca8" }],
     fact: "He wears tiny golden rings on his velvet wings — like little clock faces!" },
+  { id: "chalkhill_blue", name: "Chalkhill Blue", topic: "nw", t: "c", fw: "#b8d4e8", hw: "#c8def0",
+    deco: [{ t: "tip", f: "#5a6a7a" }, { t: "dot", x: 10, y: -10, r: 1.3, f: "#4a5a66" }, { t: "dot", x: 16, y: -14, r: 1.3, f: "#4a5a66" }, { t: "dot", x: 9, y: 12, r: 1.2, f: "#4a5a66" }],
+    fact: "A silvery-blue gentleman who only lives on chalky hills!" },
+  { id: "small_heath", name: "Small Heath", topic: "oe", t: "c", fw: "#dba858", hw: "#cf9c50",
+    deco: [{ t: "eye", x: 19, y: -17, r: 2.6, c1: "#5a4a30", c2: "#fff" }, { t: "hband", f: "#b8884a" }],
+    fact: "One of our tiniest butterflies — it never opens its wings while resting!" },
+  { id: "wall_brown", name: "Wall Brown", topic: "shp", t: "c", fw: "#d8923a", hw: "#cc8836",
+    deco: [{ t: "tip", f: "#5a4528" }, { t: "eye", x: 20, y: -18, r: 3.2, c1: "#33291f", c2: "#fff", c3: "#33291f" }, { t: "band", f: "#8a6a3a" }, { t: "dot", x: 10, y: 13, r: 1.6, f: "#5a4528" }],
+    fact: "It loves basking on sunny walls and stony paths — just like its name says!" },
   { id: "meadow_brown", name: "Meadow Brown", topic: null, t: "u", fw: "#7a5c38", hw: "#86663e",
     deco: [{ t: "dot", x: 18, y: -16, r: 4, f: "#d8893a" }, { t: "eye", x: 19, y: -17, r: 2.2, c1: "#33291f", c2: "#fff", c3: "#33291f" }],
     fact: "The quiet queen of every English meadow." },
@@ -884,6 +893,46 @@ function shareSVG(a, n) {
   return '<svg viewBox="0 0 ' + w + ' ' + h + '" style="height:' + Math.min(104, h * 1.5) + 'px">' + c + '</svg>';
 }
 
+// counters in pairs — the classroom model for odd & even: everything pairs up,
+// or one golden counter is left without a partner
+function pairsSVG(n) {
+  let s = "";
+  for (let i = 0; i < n; i++) {
+    const col = Math.floor(i / 2), row = i % 2, lone = i === n - 1 && n % 2 === 1;
+    s += '<circle cx="' + (12 + col * 22) + '" cy="' + (12 + row * 22) + '" r="8.5" fill="' +
+         (lone ? "#e8b73a" : "#6fa8dc") + '" stroke="' + (lone ? "#a8842a" : "#41719c") + '" stroke-width="1.5"/>';
+  }
+  const w = 24 + (Math.ceil(n / 2) - 1) * 22;
+  return '<svg viewBox="0 0 ' + w + ' 46" style="height:74px">' + s + '</svg>';
+}
+// 2-D shapes, drawn flat and friendly like a classroom shape poster
+const SHAPES = [
+  { id: "circle", name: "circle", sides: 0, corners: 0, lvl: 0, f: "#e6a4b8", s: "#b8718a" },
+  { id: "triangle", name: "triangle", sides: 3, corners: 3, lvl: 0, f: "#9ec7e8", s: "#41719c" },
+  { id: "square", name: "square", sides: 4, corners: 4, lvl: 0, f: "#a8d8a0", s: "#5a8f52" },
+  { id: "rectangle", name: "rectangle", sides: 4, corners: 4, lvl: 0, f: "#e8c84f", s: "#b89a2a" },
+  { id: "pentagon", name: "pentagon", sides: 5, corners: 5, lvl: 1, f: "#c4a8e0", s: "#8a6ab0" },
+  { id: "hexagon", name: "hexagon", sides: 6, corners: 6, lvl: 1, f: "#e0945a", s: "#a86a38" },
+  { id: "octagon", name: "octagon", sides: 8, corners: 8, lvl: 2, f: "#d9534f", s: "#9e3a36" }
+];
+function shapePic(id) {
+  const sh = SHAPES.find(x => x.id === id);
+  let body;
+  if (id === "circle") body = '<circle r="28"';
+  else if (id === "square") body = '<rect x="-25" y="-25" width="50" height="50"';
+  else if (id === "rectangle") body = '<rect x="-33" y="-21" width="66" height="42"';
+  else {
+    const pts = [];
+    for (let k = 0; k < sh.sides; k++) {
+      const a = -Math.PI / 2 + k * 2 * Math.PI / sh.sides;
+      pts.push((30 * Math.cos(a)).toFixed(1) + "," + (30 * Math.sin(a)).toFixed(1));
+    }
+    body = '<polygon points="' + pts.join(" ") + '"';
+  }
+  return '<svg viewBox="-40 -38 80 76" style="height:88px">' + body +
+         ' fill="' + sh.f + '" stroke="' + sh.s + '" stroke-width="3" stroke-linejoin="round"/></svg>';
+}
+
 function appleG(cx, cy, fill, stroke) {
   return '<circle cx="' + cx + '" cy="' + cy + '" r="7.5" fill="' + fill + '" stroke="' + stroke + '" stroke-width="1.5"/>' +
          '<path d="M' + cx + " " + (cy - 7) + " Q " + (cx + 1) + " " + (cy - 11) + " " + (cx + 4) + " " + (cy - 12) +
@@ -1139,7 +1188,7 @@ function tableMode(n, year, sp, label) {
 // end-of-Year-2 quizzes: every question is borrowed from a Year 2 topic at a fixed
 // difficulty, so a round works like a friendly end-of-year check-up. A round visits
 // ten different topics (shuffled bag); 8+ stars clears the quiz and opens the next.
-const QUIZ_POOL = ["x2", "x5", "x10", "add", "sub", "div", "miss", "pv", "frac", "money", "time", "add2", "sub2"];
+const QUIZ_POOL = ["x2", "x5", "x10", "add", "sub", "div", "miss", "pv", "frac", "money", "time", "nw", "oe", "shp", "add2", "sub2"];
 let quizBag = [];
 function quizMode(n, h) {
   return { label: "Quiz " + n, year: "q", quiz: true, gen(p) {
@@ -1390,6 +1439,78 @@ const MODES = {
              explain: "the clock says " + correct, sayExplain: "the clock says " + correct,
              picture: clockSVG(hr, mm) };
   } },
+  nw: { label: "Number words", year: 2, sp: "chalkhill_blue", gen(p) {
+    const h = hardness();
+    const v = p ? p.v : hrnd(h, 3, 20, 21, 99);
+    const dir = p ? p.dir : (Math.random() < 0.5 ? "w2n" : "n2w");
+    // the classic traps: digit swap (47/74) and teen/ty mix-ups (14/40)
+    const rev = v > 12 && v < 100 && v % 11 !== 0 ? parseInt(String(v).split("").reverse().join("")) : v + 2;
+    const pool = [rev, v + 1, v - 1, v + 10, v - 10].filter(x => x > 0 && x < 100 && x !== v);
+    if (dir === "w2n") {
+      return { p: { v, dir }, text: "“" + words(v) + "”", say: "Which number says " + words(v) + "?",
+               correct: String(v), options: numOptions(v, pool),
+               explain: "“" + words(v) + "” is written " + v, sayExplain: words(v) + " is written with a " +
+                 (v >= 10 ? words(Math.floor(v / 10)) + " and a " + words(v % 10 || 0) : words(v)) };
+    }
+    const opts = shuffle([v, ...shuffle(pool).slice(0, 2)]).map(x => words(x));
+    return { p: { v, dir }, text: "Which says " + v + "?", say: "Find the words that say " + words(v) + ".",
+             correct: words(v), options: opts,
+             explain: v + " says “" + words(v) + "”", sayExplain: v + " says " + words(v) };
+  } },
+  oe: { label: "Odd & even", year: 2, sp: "small_heath", gen(p) {
+    const h = hardness();
+    const f = p ? p.f : (Math.random() < 0.55 ? "is" : "find");
+    if (f === "is") {
+      const v = p ? p.v : hrnd(h, 1, 10, 11, 99);
+      const odd = v % 2 === 1;
+      return { p: { f, v }, text: "Is " + v + " odd or even?",
+               say: "Is " + words(v) + " an odd number, or an even number?" + (v <= 20 ? " Try putting the counters into pairs!" : " Look at the last digit!"),
+               correct: odd ? "odd" : "even", options: ["odd", "even"],
+               explain: v + " is " + (odd ? "odd — one counter is left without a pair" : "even — every counter has a pair"),
+               sayExplain: words(v) + " is " + (odd ? "an odd number — when you make pairs, one is always left over" : "an even number — everything pairs up perfectly"),
+               picture: h < 0.6 && v <= 20 ? pairsSVG(v) : "" };
+    }
+    const wantOdd = p ? p.w : Math.random() < 0.5;
+    let a = p ? p.a : null;
+    if (!a) {
+      const base = hrnd(h, 2, 12, 10, 90);
+      const match = Math.max(1, base - (base % 2) + (wantOdd ? 1 : 0));
+      const others = [];
+      while (others.length < 2) {
+        const c = match + [1, 3, -1, -3, 5][rnd(0, 4)];
+        if (c > 0 && !others.includes(c)) others.push(c);
+      }
+      a = shuffle([match, ...others]);
+    }
+    const correct = a.find(x => (x % 2 === 1) === wantOdd);
+    return { p: { f, w: wantOdd, a }, text: "Which is " + (wantOdd ? "odd" : "even") + "?",
+             say: "Which of these numbers is " + (wantOdd ? "odd" : "even") + "? " + a.map(words).join(", "),
+             correct: String(correct), options: a.map(String),
+             explain: correct + " is the " + (wantOdd ? "odd" : "even") + " one",
+             sayExplain: words(correct) + " is the " + (wantOdd ? "odd" : "even") + " one" };
+  } },
+  shp: { label: "Shapes", year: 2, sp: "wall_brown", gen(p) {
+    const h = hardness();
+    const avail = SHAPES.filter(s => s.lvl <= (h < 0.35 ? 0 : h < 0.7 ? 1 : 2));
+    const s = p ? SHAPES.find(x => x.id === p.s) : avail[rnd(0, avail.length - 1)];
+    const f = p ? p.f : (s.id === "circle" ? "name" : ["name", "sides", "corners"][rnd(0, 2)]);
+    if (f === "name") {
+      const others = shuffle(SHAPES.filter(x => x.id !== s.id)).slice(0, 2).map(x => x.name);
+      return { p: { f, s: s.id }, text: "What shape is this?", say: "What is this shape called?",
+               correct: s.name, options: shuffle([s.name, ...others]),
+               explain: "it is a " + s.name,
+               sayExplain: "it is a " + s.name + (s.sides ? " — it has " + words(s.sides) + " sides" : " — perfectly round, with no corners at all"),
+               picture: shapePic(s.id) };
+    }
+    const n = f === "sides" ? s.sides : s.corners;
+    const what = f === "sides" ? "sides" : "corners";
+    return { p: { f, s: s.id }, text: "How many " + what + "?",
+             say: "Look at the " + s.name + ". How many " + (f === "sides" ? "sides" : "corners — teachers call them vertices —") + " does it have?",
+             correct: String(n), options: numOptions(n, [n - 1, n + 1, n + 2, n - 2]),
+             explain: "a " + s.name + " has " + words(n) + " " + what,
+             sayExplain: "a " + s.name + " has " + words(n) + " " + what,
+             picture: shapePic(s.id) };
+  } },
   add2: { label: "Big adding", year: 2, sp: "swallowtail", gen(p) {
     const h = hardness();
     let a = p ? p.a : rnd(12, 79), b = p ? p.b : rnd(11, 99 - a);
@@ -1457,7 +1578,7 @@ function setFooter() {
 }
 
 /* ---------- mode picker ---------- */
-const MODE_ICONS = { x2: "🐞", x5: "⭐", x10: "🌼", add: "🍎", sub: "🍪", div: "🍓", miss: "🕵️", pv: "🐊", frac: "🍰", money: "💰", time: "⏰", x3: "🎈", x4: "🍀", x8: "🕷️", add2: "🚀", sub2: "🎢", quiz1: "🥉", quiz2: "🥈", quiz3: "🥇" };
+const MODE_ICONS = { x2: "🐞", x5: "⭐", x10: "🌼", add: "🍎", sub: "🍪", div: "🍓", miss: "🕵️", pv: "🐊", frac: "🍰", money: "💰", time: "⏰", x3: "🎈", x4: "🍀", x8: "🕷️", add2: "🚀", sub2: "🎢", nw: "🔤", oe: "🧦", shp: "🔷", quiz1: "🥉", quiz2: "🥈", quiz3: "🥇" };
 // quizzes open one at a time: clear a quiz (8+ stars in a round) to open the next
 function quizCleared(id) { return (S.bestRound[id] || 0) >= 8; }
 function quizLocked(id) {
@@ -2276,7 +2397,7 @@ function renderGrown() {
                    : "open, not tried yet";
       return "<li><strong>" + MODES[id].label + "</strong> — " + status + "</li>";
     }).join("") + '</ul>' +
-    '<p class="note">The quizzes sample every topic in the app — the DfE Year 2 number work: 2/5/10 (and 3/4/8) times tables, adding &amp; taking away including two-digit column sums, missing numbers, tens &amp; ones with &lt; &gt; =, fractions, sharing, money and time. Questions missed in a quiz are re-asked in that topic’s own practice. Not in the app yet (so not tested): reading numbers in words, odd &amp; even, shapes, measuring, statistics and turns.</p>' +
+    '<p class="note">The quizzes sample every topic in the app — the DfE Year 2 work: 2/5/10 (and 3/4/8) times tables, adding &amp; taking away including two-digit column sums, missing numbers, tens &amp; ones with &lt; &gt; =, numbers in words, odd &amp; even, fractions, sharing, money, time and 2-D shapes. Questions missed in a quiz are re-asked in that topic’s own practice. Not in the app yet (so not tested): 3-D solids, measuring, statistics and turns.</p>' +
     '<h3 class="sect">Accuracy by topic</h3>' +
     (rows ? '<table class="stats"><tr><th>Topic</th><th>Answered</th><th>Correct</th><th>Accuracy</th><th>This week</th></tr>' + rows + '</table>'
           : '<p class="note">No questions answered yet.</p>') +
