@@ -1924,7 +1924,7 @@ function resolveGood() {
   {
     score++;
     st.correct++;
-    delete st.missed[q.key];
+    delete topicStat((q && q.topic) || mode).missed[missKey()];
     const news = awardCatch();
     const lastId = roundIds[roundIds.length - 1];
     const caughtItem = ITEM(lastId);
@@ -1980,10 +1980,13 @@ function resolveGood() {
   }
   finishQ();
 }
+// a quiz miss is filed under its real topic, so practising Money re-asks that exact question
+function missKey() { return q.topic ? q.topic + "|" + JSON.stringify(q.p.p) : q.key; }
 function resolveBad(custom) {
-  const st = topicStat(mode);
+  const st = topicStat((q && q.topic) || mode);
   lastGood = false;
-  st.missed[q.key] = { p: q.p, t: q.text, n: ((st.missed[q.key] || {}).n || 0) + 1 };
+  const k = missKey();
+  st.missed[k] = { p: q.topic ? q.p.p : q.p, t: q.text, n: ((st.missed[k] || {}).n || 0) + 1 };
   if (custom) {
     $("msg").textContent = custom.text;
     $("msg").style.color = "#5a4a2f";
@@ -2282,11 +2285,21 @@ function renderGrown() {
                   : '<p class="note">Nothing flagged — lovely balanced practice!</p>') +
     '<p class="note">🐾 Tomorrow the <strong>' + tomFriend.name + '</strong> will visit and ask for <strong>' + tomTopic +
     '</strong> — the daily quest always aims at the topics that need love.</p>' +
+    '<h3 class="sect">Y2 Quiz check-up</h3>' +
+    '<ul>' + ["quiz1", "quiz2", "quiz3"].map(id => {
+      const best = S.bestRound[id] || 0;
+      const status = quizLocked(id) ? "🔒 locked — clear the one before to open it"
+                   : quizCleared(id) ? "✓ cleared (best " + best + "/10)"
+                   : best ? "best so far " + best + "/10 — 8 needed to clear"
+                   : "open, not tried yet";
+      return "<li><strong>" + MODES[id].label + "</strong> — " + status + "</li>";
+    }).join("") + '</ul>' +
+    '<p class="note">The quizzes sample every topic in the app — the DfE Year 2 number work: 2/5/10 (and 3/4/8) times tables, adding &amp; taking away including two-digit column sums, missing numbers, tens &amp; ones with &lt; &gt; =, fractions, sharing, money and time. Questions missed in a quiz are re-asked in that topic’s own practice. Not in the app yet (so not tested): reading numbers in words, odd &amp; even, shapes, measuring, statistics and turns.</p>' +
     '<h3 class="sect">Accuracy by topic</h3>' +
     (rows ? '<table class="stats"><tr><th>Topic</th><th>Answered</th><th>Correct</th><th>Accuracy</th><th>This week</th></tr>' + rows + '</table>'
           : '<p class="note">No questions answered yet.</p>') +
     '<h3 class="sect">Tricky questions (asked again until she gets them right)</h3>' +
-    (missed.length ? '<ul>' + missed.slice(0, 5).map(x => "<li><strong>" + x.t + "</strong> (" + x.m + ") — missed " + x.n + "×</li>").join("") + '</ul>'
+    (missed.length ? '<ul>' + missed.slice(0, 8).map(x => "<li><strong>" + x.t + "</strong> (" + x.m + ") — missed " + x.n + "×</li>").join("") + '</ul>'
                    : '<p class="note">Nothing outstanding — all caught up!</p>') +
     '<h3 class="sect">Child’s name (used in spoken praise)</h3>' +
     '<input id="grownName" maxlength="20" placeholder="e.g. Amara"> <button class="gbtn" id="nameSave">Save</button>' +
