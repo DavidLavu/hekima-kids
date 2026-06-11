@@ -833,40 +833,57 @@ function polyPts(cx, n, r, rot) {
   }
   return p.join(" ");
 }
+const MONEY_DEFS =
+  '<defs>' +
+  '<radialGradient id="mgC" cx="0.35" cy="0.3"><stop offset="0" stop-color="#d09058"/><stop offset="0.7" stop-color="#b5713c"/><stop offset="1" stop-color="#96572a"/></radialGradient>' +
+  '<radialGradient id="mgS" cx="0.35" cy="0.3"><stop offset="0" stop-color="#eceff2"/><stop offset="0.7" stop-color="#c6c9d2"/><stop offset="1" stop-color="#a2a5b0"/></radialGradient>' +
+  '<radialGradient id="mgG" cx="0.35" cy="0.3"><stop offset="0" stop-color="#f0d070"/><stop offset="0.7" stop-color="#d9b13a"/><stop offset="1" stop-color="#b08a24"/></radialGradient>' +
+  '</defs>';
+// beaded edge ring, like the milled border on real coins
+function beadRing(x, r) {
+  return '<circle cx="' + x + '" cy="0" r="' + r + '" fill="none" stroke="rgba(58,48,38,0.35)" stroke-width="1.1" stroke-dasharray="0.1 2.4" stroke-linecap="round"/>';
+}
 function coinSVG1(v, x) {
   const lbl = v >= 100 ? "£" + v / 100 : v + "p";
-  let body;
+  let body, txtCol = "#3a3026";
   if (v <= 2) {
     const r = v === 2 ? 18 : 14.5;
-    body = '<circle cx="' + x + '" cy="0" r="' + r + '" fill="#b5713c" stroke="#8a5226" stroke-width="1.5"/>' +
-           '<circle cx="' + x + '" cy="0" r="' + (r - 2.5) + '" fill="none" stroke="#c98c54" stroke-width="1"/>';
+    body = '<circle cx="' + x + '" cy="0" r="' + r + '" fill="url(#mgC)" stroke="#7a4a20" stroke-width="1.2"/>' + beadRing(x, r - 2.2);
+    txtCol = "#4a2c14";
   } else if (v <= 10) {
     const r = v === 10 ? 16.5 : 13;
-    body = '<circle cx="' + x + '" cy="0" r="' + r + '" fill="#c9c9d0" stroke="#94949e" stroke-width="1.5"/>' +
-           '<circle cx="' + x + '" cy="0" r="' + (r - 2.5) + '" fill="none" stroke="#e0e0e6" stroke-width="1"/>';
+    body = '<circle cx="' + x + '" cy="0" r="' + r + '" fill="url(#mgS)" stroke="#84848e" stroke-width="1.2"/>' + beadRing(x, r - 2.2);
   } else if (v <= 50) {
     const r = v === 50 ? 19 : 16;
-    body = '<polygon points="' + polyPts(x, 7, r, 0) + '" fill="#c9c9d0" stroke="#94949e" stroke-width="1.5"/>' +
-           '<polygon points="' + polyPts(x, 7, r - 3, 0) + '" fill="none" stroke="#e0e0e6" stroke-width="1"/>';
+    body = '<polygon points="' + polyPts(x, 7, r, 0) + '" fill="url(#mgS)" stroke="#84848e" stroke-width="1.2"/>' +
+           '<polygon points="' + polyPts(x, 7, r - 2.6, 0) + '" fill="none" stroke="rgba(58,48,38,0.3)" stroke-width="0.9"/>';
   } else if (v === 100) {
-    body = '<polygon points="' + polyPts(x, 12, 17, 0.13) + '" fill="#d9b13a" stroke="#b08a24" stroke-width="1.5"/>' +
-           '<circle cx="' + x + '" cy="0" r="10.5" fill="#c9c9d0"/>';
+    body = '<polygon points="' + polyPts(x, 12, 17, 0.13) + '" fill="url(#mgG)" stroke="#96741c" stroke-width="1.2"/>' +
+           '<circle cx="' + x + '" cy="0" r="10.5" fill="url(#mgS)"/>' + beadRing(x, 12.6);
   } else {
-    body = '<circle cx="' + x + '" cy="0" r="18.5" fill="#d9b13a" stroke="#b08a24" stroke-width="1.5"/>' +
-           '<circle cx="' + x + '" cy="0" r="12" fill="#c9c9d0"/>';
+    body = '<circle cx="' + x + '" cy="0" r="18.5" fill="url(#mgG)" stroke="#96741c" stroke-width="1.2"/>' +
+           '<circle cx="' + x + '" cy="0" r="12" fill="url(#mgS)"/>' + beadRing(x, 14.8);
   }
-  return body + '<text x="' + x + '" y="4.5" text-anchor="middle" font-size="11.5" font-weight="700" fill="#3a3026">' + lbl + '</text>';
+  return body +
+    '<text x="' + x + '" y="4.8" text-anchor="middle" font-size="11.5" font-weight="800" font-family="Georgia, serif" fill="' + txtCol + '">' + lbl + '</text>';
 }
 function noteSVG1(v, x) {
-  const col = v === 500 ? ["#aedce0", "#3f93a3"] : v === 1000 ? ["#ecd0ac", "#b8804a"] : ["#ddc7ec", "#8f62b3"];
+  const col = v === 500 ? ["#aedce0", "#3f93a3", "Five"] : v === 1000 ? ["#ecd0ac", "#b8804a", "Ten"] : ["#ddc7ec", "#8f62b3", "Twenty"];
   const lbl = "£" + v / 100;
   return '<rect x="' + (x - 31) + '" y="-19" width="62" height="38" rx="4" fill="' + col[0] + '" stroke="' + col[1] + '" stroke-width="1.5"/>' +
-    '<ellipse cx="' + (x + 15) + '" cy="0" rx="8.5" ry="12" fill="none" stroke="' + col[1] + '" stroke-width="1.2"/>' +
-    '<circle cx="' + (x + 15) + '" cy="-3.5" r="3" fill="' + col[1] + '" opacity="0.65"/>' +
-    '<path d="M' + (x + 10) + ' 7 C ' + (x + 12) + ' 1 ' + (x + 18) + ' 1 ' + (x + 20) + ' 7 Z" fill="' + col[1] + '" opacity="0.65"/>' +
-    '<text x="' + (x - 13) + '" y="6" text-anchor="middle" font-size="16" font-weight="800" fill="#3a3026">' + lbl + '</text>' +
-    '<text x="' + (x - 27) + '" y="-9" font-size="7.5" fill="' + col[1] + '">' + lbl + '</text>' +
-    '<text x="' + (x - 27) + '" y="16" font-size="7.5" fill="' + col[1] + '">' + lbl + '</text>';
+    // wavy guilloché-style background lines
+    '<path d="M' + (x - 31) + ' -6 C ' + (x - 15) + ' -10 ' + (x + 15) + ' -2 ' + (x + 31) + ' -6 M' + (x - 31) + ' 8 C ' + (x - 15) + ' 4 ' + (x + 15) + ' 12 ' + (x + 31) + ' 8" stroke="' + col[1] + '" stroke-width="0.6" fill="none" opacity="0.45"/>' +
+    // portrait
+    '<ellipse cx="' + (x + 15) + '" cy="1" rx="8.5" ry="12" fill="none" stroke="' + col[1] + '" stroke-width="1.1"/>' +
+    '<circle cx="' + (x + 15) + '" cy="-3" r="3.2" fill="' + col[1] + '" opacity="0.7"/>' +
+    '<path d="M' + (x + 10) + ' 8 C ' + (x + 12) + ' 2 ' + (x + 18) + ' 2 ' + (x + 20) + ' 8 Z" fill="' + col[1] + '" opacity="0.7"/>' +
+    // see-through security window + foil patch
+    '<rect x="' + (x - 29) + '" y="2" width="7" height="14" rx="3.5" fill="#fdf8ec" stroke="' + col[1] + '" stroke-width="0.8" opacity="0.9"/>' +
+    '<rect x="' + (x + 1) + '" y="-16" width="5" height="9" rx="1" fill="#fff" opacity="0.55"/>' +
+    '<text x="' + x + '" y="-11.5" text-anchor="middle" font-size="4.6" font-weight="700" letter-spacing="0.5" fill="' + col[1] + '">BANK OF ENGLAND</text>' +
+    '<text x="' + (x - 12) + '" y="5.5" text-anchor="middle" font-size="13" font-weight="800" font-family="Georgia, serif" fill="#3a3026">' + lbl + '</text>' +
+    '<text x="' + (x - 12) + '" y="12.5" text-anchor="middle" font-size="4.6" font-style="italic" fill="' + col[1] + '">' + col[2] + ' Pounds</text>' +
+    '<text x="' + (x + 24) + '" y="16" text-anchor="middle" font-size="6.5" font-weight="700" fill="' + col[1] + '">' + lbl + '</text>';
 }
 function moneySVG(vals) {
   let x = 4;
@@ -875,7 +892,7 @@ function moneySVG(vals) {
     if (v >= 500) { parts.push(noteSVG1(v, x + 32)); x += 68; }
     else { parts.push(coinSVG1(v, x + 21)); x += 44; }
   }
-  return '<svg viewBox="0 -24 ' + (x + 4) + ' 48" style="height:58px">' + parts.join("") + "</svg>";
+  return '<svg viewBox="0 -24 ' + (x + 4) + ' 48" style="height:58px">' + MONEY_DEFS + parts.join("") + "</svg>";
 }
 function clockSVG(hr, mm) {
   const ha = (hr % 12) * 30 + mm * 0.5, ma = mm * 6;
