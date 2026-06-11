@@ -478,6 +478,10 @@ function pickVoice() {
 if ("speechSynthesis" in window) {
   pickVoice();
   speechSynthesis.onvoiceschanged = pickVoice;
+  // iPadOS only reveals newly-downloaded voices after the app returns to the
+  // foreground (or relaunches) — re-scan whenever that happens
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) pickVoice(); });
+  window.addEventListener("pageshow", pickVoice);
 }
 function speak(text, opts = {}) {
   if (!S.settings.voice || !("speechSynthesis" in window) || !text) return;
