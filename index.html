@@ -1640,7 +1640,16 @@ function resolveBad(custom) {
   finishQ();
 }
 function finishQ() {
-  topicStat(mode).last = dateStr();
+  const st = topicStat(mode);
+  st.last = dateStr();
+  // per-day counters (kept 14 days) so the grown-ups page can show trends
+  st.days = st.days || {};
+  const d = st.days[st.last] || { a: 0, c: 0 };
+  d.a++;
+  if (lastGood) d.c++;
+  st.days[st.last] = d;
+  const cutoff = Date.now() - 14 * 86400000;
+  for (const k of Object.keys(st.days)) if (new Date(k).getTime() < cutoff) delete st.days[k];
   renderGarden();
   saveState();
   setStars();
@@ -1830,12 +1839,44 @@ $("albumClose").onclick = () => { sTap(); $("albumPage").classList.add("hidden")
 
 /* ---------- grown-ups ---------- */
 function renderGrown() {
+  const today = dateStr();
+  const week = st => {  // last-7-day tallies from the daily counters
+    let a = 0, c = 0;
+    for (const [k, v] of Object.entries(st.days || {})) {
+      if (Date.now() - new Date(k).getTime() < 7 * 86400000) { a += v.a; c += v.c; }
+    }
+    return { a, c };
+  };
   const rows = Object.entries(MODES).map(([id, m]) => {
     const st = S.topics[id];
     if (!st || !st.asked) return "";
     const pct = Math.round(100 * st.correct / st.asked);
-    return "<tr><td>" + m.label + " (Y" + m.year + ")</td><td>" + st.asked + "</td><td>" + st.correct + "</td><td>" + pct + "%</td></tr>";
+    const w = week(st);
+    const wTxt = w.a ? Math.round(100 * w.c / w.a) + "% (" + w.a + ")" : "—";
+    return "<tr><td>" + m.label + " (Y" + m.year + ")</td><td>" + st.asked + "</td><td>" + st.correct + "</td><td>" + pct + "%</td><td>" + wTxt + "</td></tr>";
   }).join("");
+  // needs-practice radar: weak accuracy, gone stale, or never tried
+  const radar = Object.entries(MODES).map(([id, m]) => {
+    const st = S.topics[id];
+    if (!st || st.asked < 6) return { label: m.label, why: "barely tried yet", pri: 0 };
+    const pct = Math.round(100 * st.correct / st.asked);
+    if (pct < 70) return { label: m.label, why: pct + "% accuracy", pri: 1 };
+    const ago = st.last ? Math.floor((Date.now() - new Date(st.last).getTime()) / 86400000) : 99;
+    if (ago >= 7) return { label: m.label, why: "not played for " + ago + " days", pri: 2 };
+    return null;
+  }).filter(Boolean).sort((a, b) => a.pri - b.pri).slice(0, 5);
+  // tomorrow's quest, computed the same way the morning will
+  const tom = new Date(Date.now() + 86400000);
+  const tomSeed = dateSeed(dateStr(tom));
+  const allF = TREASURES.filter(t => t.coll === "friends");
+  const unF = allF.filter(t => !(S.caught[t.id] > 0));
+  const tomFriend = unF.length ? unF[tomSeed % unF.length] : allF[tomSeed % allF.length];
+  const ranked = Object.keys(MODES).map(m => {
+    const st = topicStat(m);
+    const acc = st.asked >= 5 ? st.correct / st.asked : -1;
+    return { m, score: acc };
+  }).sort((a, b) => a.score - b.score);
+  const tomTopic = MODES[ranked[tomSeed % 3].m].label;
   const missed = [];
   for (const [id, st] of Object.entries(S.topics)) {
     for (const k of Object.keys(st.missed || {})) {
@@ -1845,8 +1886,13 @@ function renderGrown() {
   missed.sort((a, b) => b.n - a.n);
   $("grownContent").innerHTML =
     '<p>Rounds played: <strong>' + S.rounds + '</strong> · Butterflies caught: <strong>' + totalCaught() + '</strong></p>' +
+    '<h3 class="sect">Needs practice</h3>' +
+    (radar.length ? '<ul>' + radar.map(r => "<li><strong>" + r.label + "</strong> — " + r.why + "</li>").join("") + '</ul>'
+                  : '<p class="note">Nothing flagged — lovely balanced practice!</p>') +
+    '<p class="note">🐾 Tomorrow the <strong>' + tomFriend.name + '</strong> will visit and ask for <strong>' + tomTopic +
+    '</strong> — the daily quest always aims at the topics that need love.</p>' +
     '<h3 class="sect">Accuracy by topic</h3>' +
-    (rows ? '<table class="stats"><tr><th>Topic</th><th>Answered</th><th>Correct</th><th>Accuracy</th></tr>' + rows + '</table>'
+    (rows ? '<table class="stats"><tr><th>Topic</th><th>Answered</th><th>Correct</th><th>Accuracy</th><th>This week</th></tr>' + rows + '</table>'
           : '<p class="note">No questions answered yet.</p>') +
     '<h3 class="sect">Tricky questions (asked again until she gets them right)</h3>' +
     (missed.length ? '<ul>' + missed.slice(0, 5).map(x => "<li><strong>" + x.t + "</strong> (" + x.m + ") — missed " + x.n + "×</li>").join("") + '</ul>'
