@@ -221,16 +221,48 @@ table.stats th { color: #a08f6e; font-weight: 600; font-size: 12px; }
   #question.long { font-size: 26px; }
   .ans-btn { font-size: 27px; padding: 18px 0; }
 }
-/* computer screens: use the room — wider column, larger type, taller meadow */
-@media (min-width: 1100px) {
-  header { max-width: 920px; }
-  main, footer { max-width: 800px; }
-  #question { font-size: clamp(44px, 7.5vh, 68px); min-height: clamp(52px, 8.5vh, 80px); }
-  #question.long { font-size: clamp(28px, 5vh, 42px); }
-  .ans-btn { font-size: clamp(28px, 4.6vh, 42px); border-radius: 22px; }
-  .mode-btn { font-size: 15px; padding: 10px 16px; }
+/* tablets in landscape & computers: topic menu moves to a sidebar,
+   the question column gets the room — big questions, big pictures */
+@media (min-width: 1000px) {
+  header, footer { max-width: 1140px; }
+  main {
+    max-width: 1140px;
+    display: grid;
+    grid-template-columns: 248px minmax(0, 1fr);
+    grid-template-areas:
+      "modes quest" "modes stars" "modes qcount" "modes picture"
+      "modes question" "modes answers" "modes msg";
+    align-content: center;
+    column-gap: 34px;
+    overflow: hidden;
+  }
+  #modes { grid-area: modes; overflow-y: auto; min-height: 0; max-height: 100%; scrollbar-width: none;
+           mask-image: linear-gradient(#000 calc(100% - 30px), transparent);
+           -webkit-mask-image: linear-gradient(#000 calc(100% - 30px), transparent); }
+  #modes::-webkit-scrollbar { display: none; }
+  #quest { grid-area: quest; }
+  #stars { grid-area: stars; }
+  #qcount { grid-area: qcount; }
+  #picture { grid-area: picture; }
+  #question { grid-area: question; }
+  #answers { grid-area: answers; }
+  #msg { grid-area: msg; }
+  main > #stars { margin-top: clamp(4px, 1.2vh, 10px); }
+  main > #msg { margin-bottom: 2px; }
+  /* the picker becomes a vertical list */
+  #modes .ygroup { display: block; margin: 0 0 12px; }
+  #modes .ylabel { width: auto; text-align: left; margin: 4px 4px 7px; font-size: 12px; }
+  #modes .chips { flex-direction: column; align-items: stretch; gap: 8px; overflow: visible; padding: 2px 4px;
+                  mask-image: none; -webkit-mask-image: none; }
+  .mode-btn { font-size: 15px; padding: 10px 14px; justify-content: flex-start; }
   .mode-btn .ic { font-size: 19px; }
-  .ylabel { flex-basis: 42px; font-size: 12px; }
+  .mode-btn .dot { margin-left: auto; }
+  /* pictures (coins, clocks, fractions) grow to study size */
+  #picture:has(> svg) { height: clamp(110px, 24vh, 250px); }
+  #picture > svg { height: 100% !important; width: auto; max-width: 100%; }
+  #question { font-size: clamp(44px, 8vh, 72px); min-height: clamp(52px, 9vh, 84px); }
+  #question.long { font-size: clamp(28px, 5.4vh, 46px); }
+  .ans-btn { font-size: clamp(28px, 4.8vh, 44px); border-radius: 22px; }
   #quest { font-size: 15px; padding: 4px 16px 4px 7px; }
   #quest svg { width: 31px; height: 31px; }
   #qcount { font-size: 14px; }
