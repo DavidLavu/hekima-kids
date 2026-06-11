@@ -1153,7 +1153,14 @@ let quizH = null; // during a quiz question, difficulty is pinned by the quiz le
 function hardness() {
   if (quizH != null) return quizH;
   const st = topicStat(mode);
-  const mastery = Math.min(1, st.correct / 40);
+  let mastery = Math.min(1, st.correct / 40);
+  // a sharp child shouldn't grind 40 answers before a stretch:
+  // near-perfect accuracy fast-tracks her up the difficulty curve
+  if (st.asked >= 8) {
+    const acc = st.correct / st.asked;
+    if (acc >= 0.9) mastery = Math.max(mastery, Math.min(1, st.correct / 15));
+    else if (acc >= 0.75) mastery = Math.max(mastery, Math.min(1, st.correct / 25));
+  }
   const ramp = Math.min(1, qnum / (TOTAL - 1));
   let h = mastery * 0.65 + ramp * 0.35;
   if (lastGood === false) h *= 0.6;
@@ -1178,8 +1185,9 @@ function numOptions(correct, pool) {
 }
 function tableMode(n, year, sp, label) {
   return { label, year, sp, gen(p) {
-    // easy facts (×1–5) first; the tricky ×6–12 arrive as she grows
-    const a = p ? p.a : hrnd(hardness(), 1, 5, 3, 12);
+    // easy facts (×1–9) first; the tricky ×10–12 arrive as she grows.
+    // the band stays ≥10 wide so a full round never has to repeat a fact
+    const a = p ? p.a : hrnd(hardness(), 1, 9, 3, 12);
     const c = a * n;
     return { p: { a }, text: a + " × " + n + " = ?", say: "What is " + words(a) + " times " + words(n) + "?",
              correct: String(c), options: numOptions(c, [c - n, c + n, c - 1, c + 1, c + 10]) };
@@ -1228,6 +1236,10 @@ const MODES = {
         // gentle: stay inside the ten (nudge the ones digit so there is room)
         if (a % 10 > 7) a = a - a % 10 + rnd(1, 7);
         b = rnd(2, 9 - a % 10);
+      } else if (h >= 0.7) {
+        // stretch: always cross the ten (47 + 8 style, never 43 + 4)
+        if (a % 10 < 2) a = a - a % 10 + rnd(2, 8);
+        b = rnd(11 - a % 10, 9);
       } else b = rnd(2, 9);
     }
     const c = a + b;
@@ -1246,14 +1258,15 @@ const MODES = {
                correct: String(c), options: numOptions(c, [c - 1, c + 1, c + 2, b, a]),
                picture: subPicSVG(a, b) };
     }
-    const a = p ? p.a : (kind === "tens" ? hrnd(h, 31, 69, 41, 99) : hrnd(h, 11, 49, 21, 99));
+    let a = p ? p.a : (kind === "tens" ? hrnd(h, 31, 69, 41, 99) : hrnd(h, 11, 49, 21, 99));
     let b = p ? p.b : 0;
     if (!p) {
       if (kind === "tens") b = rnd(1, Math.min(3, Math.floor((a - 1) / 10))) * 10;
       else {
-        const o = a % 10;
-        // gentle: no borrowing needed; harder: cross under the ten
-        b = (h < 0.4 && o >= 2) ? rnd(2, o) : rnd(2, 9);
+        let o = a % 10;
+        // gentle: no borrowing needed; stretch: always cross under the ten (52 − 7 style)
+        if (h >= 0.7 && o > 6) { a = a - o + rnd(0, 6); o = a % 10; }
+        b = (h < 0.4 && o >= 2) ? rnd(2, o) : h >= 0.7 ? rnd(Math.max(2, o + 1), 9) : rnd(2, 9);
       }
     }
     const c = a - b;
@@ -1514,10 +1527,10 @@ const MODES = {
   add2: { label: "Big adding", year: 2, sp: "swallowtail", gen(p) {
     const h = hardness();
     let a = p ? p.a : rnd(12, 79), b = p ? p.b : rnd(11, 99 - a);
-    // gentle: no carrying; expert: always a carry to practise
+    // gentle: no carrying; from mid-level up: always a carry to practise
     for (let i = 0; !p && i < 25; i++) {
       const carry = (a % 10) + (b % 10) >= 10;
-      if (h < 0.4 ? !carry : (h > 0.75 ? carry : true)) break;
+      if (h < 0.3 ? !carry : (h >= 0.55 ? carry : true)) break;
       a = rnd(12, 79); b = rnd(11, 99 - a);
     }
     const c = a + b;
@@ -1528,10 +1541,10 @@ const MODES = {
   sub2: { label: "Big taking away", year: 2, sp: "fritillary", gen(p) {
     const h = hardness();
     let a = p ? p.a : rnd(25, 99), b = p ? p.b : rnd(11, a - 12);
-    // gentle: no exchanging; expert: always an exchange to practise
+    // gentle: no exchanging; from mid-level up: always an exchange to practise
     for (let i = 0; !p && i < 25; i++) {
       const exch = (a % 10) < (b % 10);
-      if (h < 0.4 ? !exch : (h > 0.75 ? exch : true)) break;
+      if (h < 0.3 ? !exch : (h >= 0.55 ? exch : true)) break;
       a = rnd(25, 99); b = rnd(11, a - 12);
     }
     const c = a - b;
@@ -1878,16 +1891,23 @@ function unlockRare() {
 }
 
 /* ---------- question flow ---------- */
+let roundSeen = new Set(); // question signatures already asked this round — no repeats inside a round
 function drawQuestion() {
   const st = topicStat(mode);
-  const keys = Object.keys(st.missed);
+  const keys = Object.keys(st.missed).filter(k => !roundSeen.has("k:" + k));
   if (keys.length && Math.random() < 0.34) {
     const k = keys[rnd(0, keys.length - 1)];
     const qq = MODES[mode].gen(st.missed[k].p);
     qq.key = k;
+    roundSeen.add("k:" + k);
     return qq;
   }
-  const qq = MODES[mode].gen();
+  let qq;
+  for (let i = 0; i < 14; i++) {
+    qq = MODES[mode].gen();
+    if (!roundSeen.has(qq.text + "|" + qq.correct)) break;
+  }
+  roundSeen.add(qq.text + "|" + qq.correct);
   qq.key = mode + "|" + JSON.stringify(qq.p);
   return qq;
 }
@@ -2211,6 +2231,7 @@ function end() {
 let roundStartLvl = 1;
 function restart() {
   qnum = 0; score = 0; roundNew = []; roundIds = [];
+  roundSeen = new Set();
   quizBag = []; // each quiz round samples a fresh spread of topics
   roundStartLvl = topicLvl(mode);
   ensureQuest();
