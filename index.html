@@ -843,29 +843,62 @@ const MONEY_DEFS =
 function beadRing(x, r) {
   return '<circle cx="' + x + '" cy="0" r="' + r + '" fill="none" stroke="rgba(58,48,38,0.35)" stroke-width="1.1" stroke-dasharray="0.1 2.4" stroke-linecap="round"/>';
 }
+// wording curved around the rim, like the real coin
+function arcText(x, r, txt, col) {
+  const id = "ar" + x + "_" + Math.round(r * 10);
+  return '<path id="' + id + '" d="M ' + (x - r) + ' 1 A ' + r + " " + r + ' 0 0 1 ' + (x + r) + ' 1" fill="none"/>' +
+    '<text font-size="4.4" font-weight="700" letter-spacing="0.5" fill="' + col + '">' +
+    '<textPath href="#' + id + '" startOffset="50%" text-anchor="middle">' + txt + '</textPath></text>';
+}
+// simplified versions of the real reverse designs
+function coinEmblem(v, col) {
+  if (v === 1) // portcullis
+    return '<g stroke="' + col + '" stroke-width="1" fill="none"><path d="M-4.5 -5 V5 M0 -5 V5.5 M4.5 -5 V5 M-6 -2.5 H6 M-6 1.5 H6 M-6 -5 H6"/><path d="M-6 -5 L-7.5 -7 M6 -5 L7.5 -7"/></g>';
+  if (v === 2) // Prince of Wales feathers
+    return '<g fill="' + col + '"><path d="M0 -8 C -1.6 -4 -1.6 2 0 6.5 C 1.6 2 1.6 -4 0 -8 Z"/><path d="M-5 -6 C -6 -2 -5.5 2 -3 5.5 C -2.4 1.5 -3 -3 -5 -6 Z"/><path d="M5 -6 C 6 -2 5.5 2 3 5.5 C 2.4 1.5 3 -3 5 -6 Z"/></g><path d="M-4 6.5 C -1.5 8.5 1.5 8.5 4 6.5" stroke="' + col + '" stroke-width="1.4" fill="none"/>';
+  if (v === 5) // crowned thistle
+    return '<path d="M-3.5 -4 L-1.8 -6.5 L0 -4.2 L1.8 -6.5 L3.5 -4 Z" fill="' + col + '"/><circle cy="0" r="3.4" fill="' + col + '"/><path d="M-3 -2 L-5 -3.5 M3 -2 L5 -3.5" stroke="' + col + '" stroke-width="1.2"/><path d="M0 3.4 C -1 5 -1 6 0 7.5 C 1 6 1 5 0 3.4" fill="' + col + '"/>';
+  if (v === 10) // crowned lion
+    return '<path d="M-5 -5 L-3.4 -7.4 L-1.6 -5.4 L0.2 -7.4 L2 -5 Z" fill="' + col + '"/><path d="M-6.5 6 L-6.5 1 C -6.5 -1.5 -5 -3 -2.5 -3 L2 -3 C 2.6 -4.6 4.8 -4.8 5.2 -3.2 L6.8 -2 C 7.8 -1.2 7 0 5.8 0 L4.8 0 L4.8 6 L2.6 6 L2.6 3.4 L-2 3.4 L-2 6 Z" fill="' + col + '"/>';
+  if (v === 20) // crowned Tudor rose
+    return '<path d="M-3.5 -5.4 L-1.8 -7.8 L0 -5.6 L1.8 -7.8 L3.5 -5.4 Z" fill="' + col + '"/><g fill="' + col + '"><circle cx="0" cy="-2.2" r="2"/><circle cx="2.6" cy="-0.2" r="2"/><circle cx="1.6" cy="2.8" r="2"/><circle cx="-1.6" cy="2.8" r="2"/><circle cx="-2.6" cy="-0.2" r="2"/></g><circle cy="0.5" r="1.6" fill="#fdf8ec" opacity="0.5"/>';
+  if (v === 50) // Britannia: trident and shield
+    return '<g stroke="' + col + '" stroke-width="1.2" fill="none"><path d="M-2 7 L-2 -4 M-4.5 -7 C -4.5 -4.5 -3.5 -4 -2 -4 C -0.5 -4 0.5 -4.5 0.5 -7 M-2 -4 L-2 -7.5"/></g><circle cx="3.5" cy="1" r="3.6" fill="none" stroke="' + col + '" stroke-width="1.2"/><path d="M3.5 -2.6 V4.6 M-0.1 1 H7.1" stroke="' + col + '" stroke-width="0.9"/>';
+  if (v === 100) // royal shield
+    return '<path d="M-4.5 -5 L4.5 -5 L4.5 1 C 4.5 4 2.5 6 0 7 C -2.5 6 -4.5 4 -4.5 1 Z" fill="none" stroke="' + col + '" stroke-width="1.2"/><path d="M0 -5 L0 7 M-4.5 1 L4.5 1" stroke="' + col + '" stroke-width="0.9"/>';
+  // £2: concentric technology rings
+  return '<circle r="8" fill="none" stroke="' + col + '" stroke-width="1.1"/><circle r="4.6" fill="none" stroke="' + col + '" stroke-width="1.1"/><path d="M0 -8 V-4.6 M0 8 V4.6 M-8 0 H-4.6 M8 0 H4.6 M-5.7 -5.7 L-3.3 -3.3 M5.7 5.7 L3.3 3.3 M-5.7 5.7 L-3.3 3.3 M5.7 -5.7 L3.3 -3.3" stroke="' + col + '" stroke-width="0.9"/>';
+}
+const COIN_WORD = { 1: "ONE PENNY", 2: "TWO PENCE", 5: "FIVE PENCE", 10: "TEN PENCE", 20: "TWENTY PENCE", 50: "FIFTY PENCE", 100: "ONE POUND", 200: "TWO POUNDS" };
+// true relative sizes (1p 20mm … 50p 27mm)
+const COIN_R = { 1: 14, 2: 18, 5: 12.5, 10: 17, 20: 15, 50: 19, 100: 16, 200: 19.5 };
 function coinSVG1(v, x) {
-  const lbl = v >= 100 ? "£" + v / 100 : v + "p";
-  let body, txtCol = "#3a3026";
+  const r = COIN_R[v];
+  let body, ink;
   if (v <= 2) {
-    const r = v === 2 ? 18 : 14.5;
-    body = '<circle cx="' + x + '" cy="0" r="' + r + '" fill="url(#mgC)" stroke="#7a4a20" stroke-width="1.2"/>' + beadRing(x, r - 2.2);
-    txtCol = "#4a2c14";
+    ink = "#6e421c";
+    body = '<circle cx="' + x + '" cy="0" r="' + r + '" fill="url(#mgC)" stroke="#7a4a20" stroke-width="1.2"/>' + beadRing(x, r - 1.8);
   } else if (v <= 10) {
-    const r = v === 10 ? 16.5 : 13;
-    body = '<circle cx="' + x + '" cy="0" r="' + r + '" fill="url(#mgS)" stroke="#84848e" stroke-width="1.2"/>' + beadRing(x, r - 2.2);
+    ink = "#74747e";
+    body = '<circle cx="' + x + '" cy="0" r="' + r + '" fill="url(#mgS)" stroke="#84848e" stroke-width="1.2"/>' + beadRing(x, r - 1.8);
   } else if (v <= 50) {
-    const r = v === 50 ? 19 : 16;
+    ink = "#74747e";
     body = '<polygon points="' + polyPts(x, 7, r, 0) + '" fill="url(#mgS)" stroke="#84848e" stroke-width="1.2"/>' +
-           '<polygon points="' + polyPts(x, 7, r - 2.6, 0) + '" fill="none" stroke="rgba(58,48,38,0.3)" stroke-width="0.9"/>';
+           '<polygon points="' + polyPts(x, 7, r - 2.2, 0) + '" fill="none" stroke="rgba(58,48,38,0.25)" stroke-width="0.8"/>';
   } else if (v === 100) {
-    body = '<polygon points="' + polyPts(x, 12, 17, 0.13) + '" fill="url(#mgG)" stroke="#96741c" stroke-width="1.2"/>' +
-           '<circle cx="' + x + '" cy="0" r="10.5" fill="url(#mgS)"/>' + beadRing(x, 12.6);
+    ink = "#74747e";
+    body = '<polygon points="' + polyPts(x, 12, r, 0.13) + '" fill="url(#mgG)" stroke="#96741c" stroke-width="1.2"/>' +
+           '<circle cx="' + x + '" cy="0" r="' + (r - 5) + '" fill="url(#mgS)"/>';
   } else {
-    body = '<circle cx="' + x + '" cy="0" r="18.5" fill="url(#mgG)" stroke="#96741c" stroke-width="1.2"/>' +
-           '<circle cx="' + x + '" cy="0" r="12" fill="url(#mgS)"/>' + beadRing(x, 14.8);
+    ink = "#74747e";
+    body = '<circle cx="' + x + '" cy="0" r="' + r + '" fill="url(#mgG)" stroke="#96741c" stroke-width="1.2"/>' +
+           '<circle cx="' + x + '" cy="0" r="' + (r - 6) + '" fill="url(#mgS)"/>';
   }
+  const wordInk = v === 100 ? "#8a6a1c" : v === 200 ? "#8a6a1c" : ink;
   return body +
-    '<text x="' + x + '" y="4.8" text-anchor="middle" font-size="11.5" font-weight="800" font-family="Georgia, serif" fill="' + txtCol + '">' + lbl + '</text>';
+    '<g transform="translate(' + x + ' 1.5) scale(' + (r / 16).toFixed(2) + ') translate(' + (-x) + ' 0)">' +
+    '<g transform="translate(' + x + ' 0)">' + coinEmblem(v, ink) + '</g></g>' +
+    arcText(x, r - 5.2, COIN_WORD[v], wordInk);
 }
 function noteSVG1(v, x) {
   const col = v === 500 ? ["#aedce0", "#3f93a3", "Five"] : v === 1000 ? ["#ecd0ac", "#b8804a", "Ten"] : ["#ddc7ec", "#8f62b3", "Twenty"];
@@ -892,8 +925,16 @@ function moneySVG(vals) {
     if (v >= 500) { parts.push(noteSVG1(v, x + 32)); x += 68; }
     else { parts.push(coinSVG1(v, x + 21)); x += 44; }
   }
-  return '<svg viewBox="0 -24 ' + (x + 4) + ' 48" style="height:58px">' + MONEY_DEFS + parts.join("") + "</svg>";
+  // bigger when there are few items, so the coin designs are studyable
+  const hpx = vals.length <= 2 ? 86 : vals.length <= 4 ? 72 : 60;
+  return '<svg viewBox="0 -24 ' + (x + 4) + ' 48" style="height:' + hpx + 'px">' + MONEY_DEFS + parts.join("") + "</svg>";
 }
+// how a grown-up would describe each coin to a child
+const COIN_DESC = {
+  1: "small copper penny", 2: "big copper two pence", 5: "tiny silver five pence",
+  10: "big silver ten pence", 20: "small seven-sided twenty pence", 50: "big seven-sided fifty pence",
+  100: "golden one pound coin", 200: "two-coloured two pound coin"
+};
 function clockSVG(hr, mm) {
   const ha = (hr % 12) * 30 + mm * 0.5, ma = mm * 6;
   let marks = "";
@@ -1105,8 +1146,20 @@ const MODES = {
       for (const v of shuffle(pool)) if (o.length < 3 && v > 0 && v !== c && !o.includes(fmt(v))) o.push(fmt(v));
       return shuffle(o);
     };
-    const kinds = h < 0.4 ? ["count"] : h < 0.6 ? ["count", "change"] : ["count", "change", "pounds", "enough"];
+    const kinds = h < 0.4 ? ["coinvalue", "count"] : h < 0.6 ? ["coinvalue", "count", "change"] : ["count", "change", "pounds", "enough"];
     const kind = p ? p.kind : kinds[rnd(0, kinds.length - 1)];
+    if (kind === "coinvalue") {
+      // recognise the coin by its look — no numbers printed on it
+      const denoms = [1, 2, 5, 10, 20, 50, 100, 200];
+      const v = p ? p.v : denoms[rnd(0, h < 0.5 ? 5 : 7)];
+      const wrong = shuffle(denoms.filter(d => d !== v)).slice(0, 2);
+      return { p: { kind, v }, text: "How much is this coin worth?",
+               say: "Look at this coin very carefully — its shape, its colour, its size. How much is it worth?",
+               correct: fmt(v), options: shuffle([fmt(v), ...wrong.map(fmt)]),
+               explain: "that is the " + COIN_DESC[v],
+               sayExplain: "that one is the " + COIN_DESC[v],
+               picture: moneySVG([v]) };
+    }
     if (kind === "pounds") {
       // count £ coins and notes, whole pounds only (Y2 keeps £ and p separate)
       const pool = [100, 200, 500, 500, 1000, 2000];
