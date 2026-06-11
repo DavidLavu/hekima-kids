@@ -129,6 +129,20 @@ footer {
 footer a { color: #a08f6e; text-decoration: underline; cursor: pointer; }
 #meadow { display: block; width: 100%; margin-top: auto; flex: 0 0 auto; height: clamp(90px, 18vh, 200px); }
 
+/* daily quest pill */
+#quest {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  margin: 5px auto 0; padding: 3px 14px 3px 6px; width: max-content; max-width: 96%;
+  font-size: 13.5px; font-weight: 600; color: #5a4a2f;
+  background: #fff; border: 2px solid #e4dcc8; border-radius: 999px; cursor: pointer;
+}
+#quest.hidden { display: none; }
+#quest.done { border-color: #6aa84f; background: #eef7ea; }
+#quest svg { width: 27px; height: 27px; }
+/* seasonal falling bits */
+.fall { animation: fallY 10s linear infinite; }
+@keyframes fallY { from { transform: translateY(-30px); opacity: 0.9; } to { transform: translateY(190px); opacity: 0; } }
+
 /* treasures in the scene */
 .tbob { animation: tbob 4.5s ease-in-out infinite; }
 @keyframes tbob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
@@ -213,6 +227,7 @@ table.stats th { color: #a08f6e; font-weight: 600; font-size: 12px; }
 </header>
 <main>
   <div id="modes"></div>
+  <div id="quest" class="hidden" title="Today’s quest"></div>
   <div id="stars"></div>
   <p id="qcount"></p>
   <div id="picture" title="Tap to hear the question again"></div>
@@ -550,6 +565,17 @@ const TREASURES = [
   { id: "t_hat", name: "Wizard's Hat", coll: "magic", t: "c", topic: "add2", fact: "A pointy hat simply full of star secrets." },
   { id: "t_egg", name: "Dragon Egg", coll: "magic", t: "c", topic: "sub2", fact: "Shhh… something magical is sleeping inside." },
   { id: "t_rainbow", name: "Rainbow", coll: "magic", t: "c", topic: "pv", fact: "Sunshine and rain together make a bridge of colours." },
+  // meadow friends: one visits each morning with a quest (date-seeded, t:"f")
+  { id: "f_ladybird", name: "Ladybird", coll: "friends", t: "f", fact: "Count her spots — a seven-spot ladybird is Britain's favourite!" },
+  { id: "f_bee", name: "Bumblebee", coll: "friends", t: "f", fact: "Bees dance to tell their friends where the flowers are!" },
+  { id: "f_snail", name: "Snail", coll: "friends", t: "f", fact: "He carries his house everywhere, so he is never late home." },
+  { id: "f_frog", name: "Frog", coll: "friends", t: "f", fact: "He started life as a tiny wriggly tadpole." },
+  { id: "f_robin", name: "Robin", coll: "friends", t: "f", fact: "Robins sing all winter — even on Christmas morning." },
+  { id: "f_duckling", name: "Duckling", coll: "friends", t: "f", fact: "She follows her mum everywhere — in a perfectly straight line!" },
+  { id: "f_hedgehog", name: "Hedgehog", coll: "friends", t: "f", fact: "He snuffles through the hedge at night, counting his steps!" },
+  { id: "f_owl", name: "Owl", coll: "friends", t: "f", fact: "Owls can turn their heads almost all the way round!" },
+  { id: "f_fox", name: "Fox", coll: "friends", t: "f", fact: "Her bushy tail has its own special name — a brush!" },
+  { id: "f_squirrel", name: "Red Squirrel", coll: "friends", t: "f", fact: "She hides acorns everywhere and remembers where they all are!" },
   { id: "t_unicorn", name: "Unicorn", coll: "magic", t: "r", fact: "The rarest friend of all — she only visits the cleverest mathematicians!" },
   { id: "t_fairy", name: "Fairy", coll: "magic", t: "r", fact: "She sprinkles sparkle dust on children who keep on trying." },
   { id: "t_chest", name: "Treasure Chest", coll: "magic", t: "r", fact: "Full of golden coins — and golden answers!" }
@@ -578,7 +604,17 @@ const TREASURE_DRAW = {
   t_egg: '<path d="M0 -17 C 9 -12 12 -2 12 4 C 12 12 7 18 0 18 C -7 18 -12 12 -12 4 C -12 -2 -9 -12 0 -17 Z" fill="#6fc2b4" stroke="#4f9a8c" stroke-width="1.5"/><circle cx="-4" cy="-4" r="2.4" fill="#4f9a8c"/><circle cx="5" cy="2" r="2" fill="#4f9a8c"/><circle cx="-2" cy="8" r="1.7" fill="#4f9a8c"/><circle cx="4" cy="-9" r="1.5" fill="#4f9a8c"/><path d="M-6 -10 C -4 -12 -1 -13 1 -13" stroke="#fff" stroke-width="2" opacity="0.7" fill="none" stroke-linecap="round"/>',
   t_unicorn: '<path d="M-15 4 C -20 6 -21 12 -18 16" stroke="#e6a4b8" stroke-width="3" fill="none" stroke-linecap="round"/><rect x="-11" y="10" width="3.5" height="9" rx="1.5" fill="#f7f3ee" stroke="#ded5c6" stroke-width="1"/><rect x="-4" y="11" width="3.5" height="8" rx="1.5" fill="#f7f3ee" stroke="#ded5c6" stroke-width="1"/><rect x="3" y="10" width="3.5" height="9" rx="1.5" fill="#f7f3ee" stroke="#ded5c6" stroke-width="1"/><ellipse cx="-3" cy="6" rx="12" ry="8" fill="#f7f3ee" stroke="#ded5c6" stroke-width="1.5"/><path d="M5 -11 L2 -16 L0.5 -9 Z" fill="#f7f3ee" stroke="#ded5c6" stroke-width="1"/><circle cx="9" cy="-5" r="7" fill="#f7f3ee" stroke="#ded5c6" stroke-width="1.5"/><path d="M13 -10 L15.5 -21 L17.5 -9 Z" fill="#f2c84b" stroke="#d9a93a" stroke-width="1"/><circle cx="3" cy="-9" r="3" fill="#e6a4b8"/><circle cx="0" cy="-5" r="3" fill="#d4537e"/><circle cx="-1" cy="-1" r="3" fill="#e6a4b8"/><circle cx="11" cy="-6" r="1.2" fill="#3a3026"/>',
   t_fairy: '<ellipse cx="-7" cy="-4" rx="7" ry="10" fill="#cfe4f7" opacity="0.85" transform="rotate(20 -7 -4)"/><ellipse cx="7" cy="-4" rx="7" ry="10" fill="#cfe4f7" opacity="0.85" transform="rotate(-20 7 -4)"/><ellipse cx="-6" cy="6" rx="5" ry="7" fill="#e3f0fa" opacity="0.8" transform="rotate(35 -6 6)"/><ellipse cx="6" cy="6" rx="5" ry="7" fill="#e3f0fa" opacity="0.8" transform="rotate(-35 6 6)"/><path d="M0 -3 L7 13 L-7 13 Z" fill="#d4537e"/><path d="M-2 13 L-2 18 M2 13 L2 18" stroke="#f2d6c2" stroke-width="2" stroke-linecap="round"/><circle cy="-9" r="5" fill="#f2d6c2"/><path d="M-5 -11 A 5.5 5.5 0 0 1 5 -11" fill="#8a5a2e"/><circle cx="-12" cy="-14" r="1.3" fill="#f2c84b"/><circle cx="13" cy="-10" r="1.1" fill="#f2c84b"/><circle cx="10" cy="-18" r="1.4" fill="#f2c84b"/>',
-  t_chest: '<rect x="-15" y="-1" width="30" height="15" rx="2" fill="#9a6a3a" stroke="#6f4a24" stroke-width="1.5"/><path d="M-15 -1 C -15 -12 15 -12 15 -1 Z" fill="#b07a42" stroke="#6f4a24" stroke-width="1.5"/><circle cx="-9" cy="-13" r="3" fill="#f2c84b" stroke="#d9a93a" stroke-width="1"/><circle cx="9" cy="-14" r="2.6" fill="#f2c84b" stroke="#d9a93a" stroke-width="1"/><circle cx="0" cy="-16" r="2.8" fill="#f2c84b" stroke="#d9a93a" stroke-width="1"/><rect x="-3" y="-11" width="6" height="25" fill="#f2c84b" stroke="#d9a93a" stroke-width="1"/><circle cy="3" r="2.2" fill="#8a5a2e"/>'
+  t_chest: '<rect x="-15" y="-1" width="30" height="15" rx="2" fill="#9a6a3a" stroke="#6f4a24" stroke-width="1.5"/><path d="M-15 -1 C -15 -12 15 -12 15 -1 Z" fill="#b07a42" stroke="#6f4a24" stroke-width="1.5"/><circle cx="-9" cy="-13" r="3" fill="#f2c84b" stroke="#d9a93a" stroke-width="1"/><circle cx="9" cy="-14" r="2.6" fill="#f2c84b" stroke="#d9a93a" stroke-width="1"/><circle cx="0" cy="-16" r="2.8" fill="#f2c84b" stroke="#d9a93a" stroke-width="1"/><rect x="-3" y="-11" width="6" height="25" fill="#f2c84b" stroke="#d9a93a" stroke-width="1"/><circle cy="3" r="2.2" fill="#8a5a2e"/>',
+  f_ladybird: '<circle cy="-13" r="4.5" fill="#3a3026"/><circle cx="-2" cy="-14" r="0.9" fill="#fff"/><circle cx="2" cy="-14" r="0.9" fill="#fff"/><ellipse rx="13" ry="11" fill="#d8402c" stroke="#a32a1c" stroke-width="1.5"/><path d="M0 -11 L0 11" stroke="#3a3026" stroke-width="2"/><circle cx="-6" cy="-3" r="2.2" fill="#3a3026"/><circle cx="6" cy="-2" r="2" fill="#3a3026"/><circle cx="-4" cy="5" r="1.8" fill="#3a3026"/><circle cx="5" cy="5" r="1.7" fill="#3a3026"/>',
+  f_bee: '<ellipse cx="-4" cy="-11" rx="7" ry="5" fill="#dcebf7" opacity="0.85" transform="rotate(-22 -4 -11)"/><ellipse cx="6" cy="-11" rx="6" ry="4.5" fill="#dcebf7" opacity="0.85" transform="rotate(18 6 -11)"/><ellipse rx="12" ry="9" fill="#f2c84b" stroke="#b8932f" stroke-width="1.2"/><path d="M-4 -9 C -5 -3 -5 3 -4 9 M3 -9 C 2 -3 2 3 3 9" stroke="#3a3026" stroke-width="3.5" fill="none"/><circle cx="11" cy="-1" r="4.5" fill="#3a3026"/><circle cx="10" cy="-2" r="1" fill="#fff"/>',
+  f_snail: '<path d="M-16 12 C -10 14 8 14 14 12 C 18 11 18 7 14 7 L-10 7 Z" fill="#c9a06a"/><circle cx="3" cy="-2" r="10" fill="#b07a42" stroke="#8a5a2e" stroke-width="1.5"/><path d="M3 -2 C 8 -2 8 3 3 3 C -2 3 -2 -5 4 -6" stroke="#8a5a2e" stroke-width="1.5" fill="none"/><circle cx="-13" cy="4" r="4.5" fill="#c9a06a"/><path d="M-15 1 L-17 -5 M-11 1 L-10 -5" stroke="#c9a06a" stroke-width="1.8" stroke-linecap="round"/><circle cx="-17" cy="-6" r="1.4" fill="#c9a06a"/><circle cx="-10" cy="-6" r="1.4" fill="#c9a06a"/><circle cx="-14" cy="3" r="0.9" fill="#3a3026"/>',
+  f_frog: '<circle cx="-6" cy="-8" r="5" fill="#6aa84f" stroke="#4e7d3c" stroke-width="1.5"/><circle cx="6" cy="-8" r="5" fill="#6aa84f" stroke="#4e7d3c" stroke-width="1.5"/><ellipse cy="4" rx="13" ry="9" fill="#6aa84f" stroke="#4e7d3c" stroke-width="1.5"/><circle cx="-6" cy="-9" r="2.2" fill="#fff"/><circle cx="6" cy="-9" r="2.2" fill="#fff"/><circle cx="-6" cy="-9" r="1.1" fill="#3a3026"/><circle cx="6" cy="-9" r="1.1" fill="#3a3026"/><path d="M-5 4 Q 0 8 5 4" stroke="#3a5a2c" stroke-width="1.6" fill="none" stroke-linecap="round"/><ellipse cx="-9" cy="12" rx="4" ry="2" fill="#5d9148"/><ellipse cx="9" cy="12" rx="4" ry="2" fill="#5d9148"/>',
+  f_robin: '<path d="M6 -2 C 13 0 14 7 9 10 C 8 6 7 2 6 -2 Z" fill="#7a5e42"/><circle r="11" fill="#9a7a5a"/><ellipse cx="-3" cy="3" rx="6.5" ry="7" fill="#d8642c"/><circle cx="-5" cy="-4" r="1.4" fill="#3a3026"/><path d="M-11 -2 L-16 -1 L-11 1 Z" fill="#e8b73a"/><path d="M-2 11 L-2 16 M3 11 L3 16" stroke="#8a5a2e" stroke-width="1.6"/>',
+  f_duckling: '<ellipse cx="2" cy="5" rx="11" ry="8" fill="#f2d154" stroke="#d9b13a" stroke-width="1.2"/><path d="M7 1 C 13 0 14 5 11 8 C 9 6 8 3 7 1 Z" fill="#e3bd3f"/><circle cx="-8" cy="-6" r="6.5" fill="#f2d154" stroke="#d9b13a" stroke-width="1.2"/><circle cx="-10" cy="-7" r="1.3" fill="#3a3026"/><path d="M-14 -5 L-19 -4 L-14 -2 Z" fill="#e8923a"/><path d="M0 13 L0 17 M5 13 L5 17" stroke="#e8923a" stroke-width="1.8"/>',
+  f_hedgehog: '<path d="M-13 14 L-14 2 L-10 -2 L-10 -8 L-5 -6 L-3 -12 L2 -8 L6 -12 L8 -6 L13 -7 L12 -1 L16 2 L15 14 Z" fill="#7a5a3c"/><path d="M-13 14 C -17 14 -21 12 -22 14 L-8 14 C -9 11 -11 10 -13 14 Z" fill="#c9a06a"/><path d="M-13 10 C -17 10 -21 12 -22 14 L-9 14 C -10 11 -11 10 -13 10 Z" fill="#c9a06a"/><circle cx="-21" cy="13" r="1.6" fill="#3a3026"/><circle cx="-13" cy="10.5" r="1.1" fill="#3a3026"/><path d="M-4 14 L-4 16.5 M4 14 L4 16.5 M10 14 L10 16.5" stroke="#5a4a2f" stroke-width="1.6"/>',
+  f_owl: '<path d="M-9 -10 L-12 -17 L-4 -12 Z" fill="#7a5e42"/><path d="M9 -10 L12 -17 L4 -12 Z" fill="#7a5e42"/><ellipse rx="11" ry="13" fill="#9a7a5a" stroke="#7a5e42" stroke-width="1.2"/><circle cx="-4.5" cy="-4" r="4.5" fill="#f2e6c9"/><circle cx="4.5" cy="-4" r="4.5" fill="#f2e6c9"/><circle cx="-4.5" cy="-4" r="2" fill="#3a3026"/><circle cx="4.5" cy="-4" r="2" fill="#3a3026"/><path d="M0 -1 L-2 3 L2 3 Z" fill="#e8b73a"/><ellipse cy="8" rx="6" ry="4.5" fill="#c9b08a" opacity="0.6"/><path d="M-3 13 L-3 16 M3 13 L3 16" stroke="#e8b73a" stroke-width="1.6"/>',
+  f_fox: '<path d="M-12 -6 L-16 -16 L-6 -11 Z" fill="#d8642c"/><path d="M12 -6 L16 -16 L6 -11 Z" fill="#d8642c"/><path d="M0 14 C -10 12 -14 4 -13 -6 C -8 -10 8 -10 13 -6 C 14 4 10 12 0 14 Z" fill="#d8642c"/><path d="M0 14 C -7 13 -10 8 -10 4 C -6 7 -2 8 0 8 C 2 8 6 7 10 4 C 10 8 7 13 0 14 Z" fill="#f4eedd"/><circle cx="-5" cy="-2" r="1.6" fill="#3a3026"/><circle cx="5" cy="-2" r="1.6" fill="#3a3026"/><circle cy="9" r="2" fill="#3a3026"/>',
+  f_squirrel: '<path d="M8 12 C 18 12 20 0 16 -8 C 22 -4 24 8 18 14 C 14 17 10 16 8 12 Z" fill="#c4563a"/><ellipse cx="-2" cy="6" rx="9" ry="8" fill="#d8642c"/><ellipse cx="-4" cy="8" rx="4" ry="5" fill="#f2dcc0"/><path d="M-11 -9 L-12 -15 L-7 -11 Z" fill="#c4563a"/><circle cx="-8" cy="-5" r="6" fill="#d8642c"/><circle cx="-10" cy="-6" r="1.3" fill="#3a3026"/><circle cx="-13" cy="-3" r="1.1" fill="#7a3a28"/><path d="M-6 13 L-6 16 M0 13 L0 16" stroke="#a3492e" stroke-width="1.6"/>'
 };
 function treasureSVG(t) {
   return '<g class="treasure">' + (TREASURE_DRAW[t.id] || "") + '</g>';
@@ -600,6 +636,97 @@ function activeColl() {
 // the next common treasure waiting to be discovered, in album order
 function nextTreasure(coll) {
   return TREASURES.find(t => t.coll === coll && t.t === "c" && !(S.caught[t.id] > 0)) || null;
+}
+
+/* ---------- the daily friend & quest ---------- */
+function dateStr(d = new Date()) {
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+function dateSeed(s) {
+  let h = 0;
+  for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return h;
+}
+// each morning a friend visits with a quest aimed at her neediest topic
+function ensureQuest() {
+  const today = dateStr();
+  if (S.quest && S.quest.date === today) return;
+  const seed = dateSeed(today);
+  const all = TREASURES.filter(t => t.coll === "friends");
+  const un = all.filter(t => !(S.caught[t.id] > 0));
+  const friend = un.length ? un[seed % un.length] : all[seed % all.length];
+  const ranked = Object.keys(MODES).map(m => {
+    const st = topicStat(m);
+    const acc = st.asked >= 5 ? st.correct / st.asked : -1; // barely-tried topics are neediest
+    const fresh = st.last === today ? 0.15 : 0;             // played today already? less needy
+    return { m, score: acc + fresh };
+  }).sort((a, b) => a.score - b.score);
+  S.quest = { date: today, friend: friend.id, topic: ranked[seed % 3].m, need: 6, got: 0, done: false };
+  saveState();
+}
+function renderQuest() {
+  const qd = S.quest;
+  if (!qd) { $("quest").classList.add("hidden"); return; }
+  $("quest").classList.remove("hidden");
+  const f = TR[qd.friend];
+  const mini = '<svg viewBox="-24 -24 48 48">' + treasureSVG(f) + '</svg>';
+  $("quest").classList.toggle("done", qd.done);
+  $("quest").innerHTML = mini + "<span>" + (qd.done
+    ? "The " + f.name + " is staying! ✓"
+    : "The " + f.name + "’s quest: " + (qd.need - qd.got) + " more “" + MODES[qd.topic].label + "”!") + "</span>";
+  $("quest").onclick = () => speak(qd.done
+    ? "The " + f.name + " finished the quest with you and is staying in your meadow! " + f.fact
+    : "Good morning" + nameBit() + "! The " + f.name + " has a quest for you: get " + words(qd.need - qd.got) +
+      " more “" + MODES[qd.topic].label + "” questions right, and the " + f.name + " will stay in your meadow!");
+}
+function questProgress() {
+  const qd = S.quest;
+  if (!qd || qd.done || qd.date !== dateStr() || mode !== qd.topic) return;
+  qd.got++;
+  if (qd.got >= qd.need) {
+    qd.done = true;
+    const f = TR[qd.friend];
+    const isNew = !(S.caught[f.id] > 0);
+    S.caught[f.id] = (S.caught[f.id] || 0) + 1;
+    if (isNew) roundNew.push(f.id);
+    addTreasureToScene(f.id);
+    celebrate(f);
+    setTimeout(() => speak("Quest complete" + nameBit() + "! The " + f.name + " is staying in your meadow! " + f.fact, { queue: true }), 600);
+  }
+  renderQuest();
+}
+// once a day a mystery egg appears mid-round and hatches at the end
+function maybeEgg() {
+  const today = dateStr();
+  if (!S.egg || S.egg.date !== today) S.egg = { date: today, state: "none" };
+  if (S.egg.state !== "none" || score !== 5) return;
+  S.egg.state = "dropped";
+  const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  g.id = "eggItem";
+  g.innerHTML = '<g class="tbob"><path d="M0 -13 C 7 -9 9 -2 9 3 C 9 9 5 13 0 13 C -5 13 -9 9 -9 3 C -9 -2 -7 -9 0 -13 Z" fill="#f7ecd0" stroke="#d9a93a" stroke-width="1.5"/><circle cx="-3" cy="-3" r="1.3" fill="#e8c84f"/><circle cx="3" cy="2" r="1.6" fill="#e8c84f"/><circle cx="-2" cy="6" r="1.1" fill="#e8c84f"/></g>';
+  const vt = meadowTop();
+  g.style.transform = "translate(" + rnd(150, 530) + "px, " + rnd(Math.max(100, vt + 14), 144) + "px) scale(0.9)";
+  $("sfield").appendChild(g);
+  speak("Ooh — a mystery egg has appeared in the meadow! Finish the round to see it hatch!", { queue: true });
+}
+function hatchEgg() {
+  if (!S.egg || S.egg.state !== "dropped") return null;
+  S.egg.state = "hatched";
+  const egg = $("eggItem");
+  if (egg) egg.remove();
+  S.shiny = S.shiny || {};
+  const owned = TREASURES.filter(t => t.coll !== "friends" && S.caught[t.id] > 0 && !S.shiny[t.id]);
+  if (owned.length) {
+    const t = owned[rnd(0, owned.length - 1)];
+    S.shiny[t.id] = true;
+    return { text: " 🥚 The mystery egg hatched — your " + t.name + " turned SHINY!",
+             say: " And listen — the mystery egg hatched, and your " + t.name + " turned shiny!" };
+  }
+  const sp = SPECIES[rnd(0, SPECIES.length - 1)];
+  S.caught[sp.id] = (S.caught[sp.id] || 0) + 1;
+  addToMeadow(sp.id);
+  return { text: " 🥚 The mystery egg hatched — a " + sp.name + " flew out!",
+           say: " And the mystery egg hatched — a " + sp.name + " flew out! " + sp.fact };
 }
 
 /* ---------- question pictures ---------- */
@@ -1031,6 +1158,34 @@ function addCaughtToScene(id, opts = {}) {
   if (SP[id]) addToMeadow(id, opts);
   else addTreasureToScene(id, opts);
 }
+// the meadow dresses for the season (date-based, no network)
+function dressMeadow() {
+  const m = new Date().getMonth();
+  const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  let inner = "";
+  if (m >= 2 && m <= 4) { // spring: daffodils
+    [[120, 118], [395, 124], [598, 120]].forEach(([x, y]) => {
+      inner += '<g transform="translate(' + x + " " + y + ')"><path d="M0 14 C -1 6 1 2 0 -2" stroke="#4e7d3c" stroke-width="2.5" fill="none"/>' +
+        '<circle cx="0" cy="-6" r="3" fill="#f2c84b"/><circle cx="-4.6" cy="-3.4" r="3" fill="#f7d154"/><circle cx="4.6" cy="-3.4" r="3" fill="#f7d154"/><circle cx="-2.9" cy="1.9" r="3" fill="#f7d154"/><circle cx="2.9" cy="1.9" r="3" fill="#f7d154"/><circle cy="-2" r="2.4" fill="#e8923a"/></g>';
+    });
+  } else if (m >= 5 && m <= 7) { // summer: poppies
+    [[150, 122], [340, 128], [565, 118]].forEach(([x, y]) => {
+      inner += '<g transform="translate(' + x + " " + y + ')"><path d="M0 14 C -1 8 1 4 0 0" stroke="#4e7d3c" stroke-width="2.5" fill="none"/>' +
+        '<circle cx="-3.2" cy="-3" r="3.6" fill="#d8402c"/><circle cx="3.2" cy="-3" r="3.6" fill="#e0512f"/><circle cx="0" cy="1" r="3.6" fill="#d8402c"/><circle cy="-1.5" r="1.8" fill="#3a3026"/></g>';
+    });
+  } else if (m >= 8 && m <= 10) { // autumn: drifting leaves
+    [[140, -2, "#d8842f"], [330, -4.5, "#c46a2a"], [520, -7.5, "#e0a13a"]].forEach(([x, d, c]) => {
+      inner += '<g class="fall" style="animation-delay:' + d + 's"><path transform="translate(' + x + ' 0) rotate(30)" d="M0 -6 C 4 -3 4 3 0 6 C -4 3 -4 -3 0 -6 Z" fill="' + c + '"/></g>';
+    });
+  } else { // winter: falling snow + a snowy patch
+    [[110, 0], [250, -3], [410, -6], [580, -8]].forEach(([x, d]) => {
+      inner += '<g class="fall" style="animation-delay:' + d + 's"><circle cx="' + x + '" cy="0" r="3" fill="#fff" opacity="0.9"/></g>';
+    });
+    inner += '<path d="M210 104 C 260 96 330 108 380 102 C 350 112 250 114 210 104 Z" fill="#f6f4ef" opacity="0.8"/>';
+  }
+  g.innerHTML = inner;
+  $("meadow").insertBefore(g, $("sfield"));
+}
 // her collection flies out of the album into the field
 let populateTimers = [];
 function populateMeadow() {
@@ -1329,6 +1484,8 @@ function resolveGood() {
     }
     $("msg").style.color = "#2c6b44";
     sCorrect();
+    questProgress();
+    maybeEgg();
   }
   finishQ();
 }
@@ -1353,6 +1510,7 @@ function resolveBad(custom) {
   finishQ();
 }
 function finishQ() {
+  topicStat(mode).last = dateStr();
   saveState();
   setStars();
   setFooter();
@@ -1387,6 +1545,8 @@ function end() {
   const newNames = roundNew.map(id => ITEM(id).name);
   if (rare) say += " And something very rare has appeared: the " + rare.name + "!";
   else if (newNames.length) say += " You discovered the " + newNames.join(" and the ") + "!";
+  const hatch = hatchEgg();
+  if (hatch) { catchLine += hatch.text; say += hatch.say; }
   // first time a collection page opens: make it a moment
   S.collSeen = S.collSeen || {};
   if (coll !== "bfly" && !S.collSeen[coll]) {
@@ -1416,6 +1576,8 @@ let roundStartLvl = 1;
 function restart() {
   qnum = 0; score = 0; roundNew = []; roundIds = [];
   roundStartLvl = topicLvl(mode);
+  ensureQuest();
+  renderQuest();
   $("bfield").innerHTML = "";
   populateMeadow();
   setStars();
@@ -1464,6 +1626,7 @@ function renderAlbum() {
   });
   // treasure pages: visible once the previous collection is complete, teased before
   const tHint = t => {
+    if (t.t === "f") return "A new friend visits every morning — finish their quest to keep them!";
     if (t.t === "r") return "Catch 9 stars in one round to find this one!";
     const nt = nextTreasure(t.coll);
     if (!nt || nt.id !== t.id) return "Find the treasures before this one first…";
@@ -1496,6 +1659,19 @@ function renderAlbum() {
           '<div class="nm">???</div><div class="ct">' + tHint(t) + '</div></div>';
       }).join("") + '</div>';
   }
+  // meadow friends page: independent of the treasure progression, fills via daily quests
+  const frs = TREASURES.filter(t => t.coll === "friends");
+  const ffound = frs.filter(t => S.caught[t.id] > 0).length;
+  th += '<h3 class="sect">🐾 Meadow friends · ' + ffound + " of " + frs.length + '</h3><div class="tgrid">' +
+    frs.map(t => {
+      const n = S.caught[t.id] || 0;
+      if (n > 0) {
+        return '<div class="card" data-t="' + t.id + '">' + anyCardSVG(t.id) +
+          '<div class="nm">' + t.name + '</div><div class="ct">quest friend</div></div>';
+      }
+      return '<div class="card locked" data-t="' + t.id + '">' + anyCardSVG(t.id, true) +
+        '<div class="nm">???</div><div class="ct">' + tHint(t) + '</div></div>';
+    }).join("") + '</div>';
   $("treasureSects").innerHTML = th;
   document.querySelectorAll("#treasureSects .card").forEach(c => {
     c.onclick = () => {
@@ -1645,6 +1821,9 @@ $("question").onclick = repeatQ;
 $("picture").onclick = repeatQ;
 
 /* ---------- go ---------- */
+ensureQuest();
+renderQuest();
+dressMeadow();
 buildModes();
 setStars();
 setFooter();
