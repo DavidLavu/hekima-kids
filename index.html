@@ -850,13 +850,27 @@ function flowerG(cx, cy) {
 }
 function shareSVG(a, n) {
   if (a > 20) return "";
+  // sharing as it's done in class: the berries are dealt out under the flowers,
+  // one equal group each — the child counts one flower's share to find the answer
+  const q = a / n;
+  const cols = q > 5 ? 2 : 1, rowsPer = Math.ceil(q / cols);
+  const gw = Math.max(26, cols * 17 + 10), gap = 9;
   let c = "";
-  for (let i = 0; i < a; i++) c += berryC(10 + (i % 10) * 17, 10 + Math.floor(i / 10) * 18);
-  const rows = Math.ceil(a / 10);
-  const fy = 14 + rows * 18 + 10;
-  for (let i = 0; i < n; i++) c += flowerG(14 + i * 24, fy);
-  const w = Math.max(10 + Math.min(a, 10) * 17, 14 + n * 24), h = fy + 14;
-  return '<svg viewBox="0 0 ' + w + ' ' + h + '" style="height:' + Math.min(96, h * 1.6) + 'px">' + c + '</svg>';
+  for (let i = 0; i < n; i++) {
+    const gx = 6 + i * (gw + gap), cx = gx + gw / 2;
+    c += flowerG(cx, 13);
+    // a soft "plate" around each share, like the sharing circles on a worksheet
+    const pw = cols * 17 + 10, ph = rowsPer * 18 + 8;
+    c += '<rect x="' + (cx - pw / 2) + '" y="28" width="' + pw + '" height="' + ph +
+         '" rx="9" fill="none" stroke="#d8cdb4" stroke-width="1.5" stroke-dasharray="4 3"/>';
+    for (let j = 0; j < q; j++) {
+      const bx = cx - (cols * 17) / 2 + 8.5 + (j % cols) * 17;
+      const by = 41 + Math.floor(j / cols) * 18;
+      c += berryC(bx, by);
+    }
+  }
+  const w = 12 + n * gw + (n - 1) * gap, h = 36 + rowsPer * 18 + 8;
+  return '<svg viewBox="0 0 ' + w + ' ' + h + '" style="height:' + Math.min(104, h * 1.5) + 'px">' + c + '</svg>';
 }
 
 function appleG(cx, cy, fill, stroke) {
