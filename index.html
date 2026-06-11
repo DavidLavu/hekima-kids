@@ -172,6 +172,7 @@ svg.wig { animation: wig 0.7s ease; }
 .card .nm { font-size: 13px; font-weight: 700; color: #5a4a2f; margin-top: 2px; }
 .card .ct { font-size: 11px; color: #a08f6e; }
 .card.locked { background: #f4eedd; }
+.card.shiny { border-color: #e8b73a; background: #fffaf0; box-shadow: 0 0 10px rgba(232, 183, 58, 0.35); }
 .card.locked .nm { color: #a08f6e; }
 .card .badge { font-size: 10px; color: #b8860b; font-weight: 700; }
 #meters { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; margin-top: 8px; }
@@ -311,7 +312,7 @@ const sayVal = v => SAY_MAP[v] || (isNaN(+v) ? v : words(+v));
 
 /* ---------- state ---------- */
 function defaultState() {
-  return { caught: {}, topics: {}, rounds: 0, bestRound: {}, name: "", legacy: 0,
+  return { caught: {}, topics: {}, rounds: 0, bestRound: {}, name: "", legacy: 0, shiny: {},
            settings: { sound: true, voice: true, voiceName: "", voiceStyle: "" } };
 }
 function loadState() {
@@ -531,23 +532,24 @@ function cardSVG(sp, sil) {
 /* ---------- treasure collections (unlock after all the butterflies) ---------- */
 const STARP = "M0 -16 L4.7 -4.9 L16.5 -4.2 L7.4 3.4 L10.2 14.8 L0 8.4 L-10.2 14.8 L-7.4 3.4 L-16.5 -4.2 L-4.7 -4.9 Z";
 const TREASURES = [
-  { id: "t_moon", name: "Smiling Moon", coll: "sky", t: "c", topic: "x2", fact: "The Moon tugs the sea to make the tides dance!" },
+  // commons are listed in their unlock order: plainer first, the most charming last
   { id: "t_star", name: "Twinkle Star", coll: "sky", t: "c", topic: "x5", fact: "Stars twinkle because their light wibbles and wobbles through the air." },
-  { id: "t_shooting", name: "Shooting Star", coll: "sky", t: "c", topic: "x10", fact: "Quick — make a wish!" },
-  { id: "t_comet", name: "Comet", coll: "sky", t: "c", topic: "add", fact: "A giant snowball in space with a tail a million miles long!" },
+  { id: "t_moon", name: "Smiling Moon", coll: "sky", t: "c", topic: "x2", fact: "The Moon tugs the sea to make the tides dance!" },
   { id: "t_venus", name: "Venus", coll: "sky", t: "c", topic: "sub", fact: "The hottest planet of all — hotter than any oven!" },
-  { id: "t_earth", name: "Earth", coll: "sky", t: "c", topic: "div", fact: "Our home — the only planet with butterflies!" },
   { id: "t_mars", name: "Mars", coll: "sky", t: "c", topic: "miss", fact: "The red planet has the biggest volcano in the whole solar system." },
+  { id: "t_comet", name: "Comet", coll: "sky", t: "c", topic: "add", fact: "A giant snowball in space with a tail a million miles long!" },
+  { id: "t_earth", name: "Earth", coll: "sky", t: "c", topic: "div", fact: "Our home — the only planet with butterflies!" },
+  { id: "t_shooting", name: "Shooting Star", coll: "sky", t: "c", topic: "x10", fact: "Quick — make a wish!" },
   { id: "t_saturn", name: "Saturn", coll: "sky", t: "r", fact: "Saturn's beautiful rings are made of sparkling ice!" },
   { id: "t_jupiter", name: "Jupiter", coll: "sky", t: "r", fact: "So big that one thousand Earths could fit inside!" },
   { id: "t_rocket", name: "Rocket", coll: "sky", t: "r", fact: "Three… two… one… BLAST OFF!" },
-  { id: "t_rainbow", name: "Rainbow", coll: "magic", t: "c", topic: "pv", fact: "Sunshine and rain together make a bridge of colours." },
+  { id: "t_toadstool", name: "Fairy Toadstool", coll: "magic", t: "c", topic: "x4", fact: "Fairies use them as little red umbrellas." },
   { id: "t_crown", name: "Golden Crown", coll: "magic", t: "c", topic: "frac", fact: "Fit for the queen of the meadow — that's you!" },
   { id: "t_wand", name: "Magic Wand", coll: "magic", t: "c", topic: "x3", fact: "Swish and flick! Every good spell starts with maths." },
-  { id: "t_toadstool", name: "Fairy Toadstool", coll: "magic", t: "c", topic: "x4", fact: "Fairies use them as little red umbrellas." },
   { id: "t_potion", name: "Magic Potion", coll: "magic", t: "c", topic: "x8", fact: "A fizzy potion of moonlight and berry juice!" },
   { id: "t_hat", name: "Wizard's Hat", coll: "magic", t: "c", topic: "add2", fact: "A pointy hat simply full of star secrets." },
   { id: "t_egg", name: "Dragon Egg", coll: "magic", t: "c", topic: "sub2", fact: "Shhh… something magical is sleeping inside." },
+  { id: "t_rainbow", name: "Rainbow", coll: "magic", t: "c", topic: "pv", fact: "Sunshine and rain together make a bridge of colours." },
   { id: "t_unicorn", name: "Unicorn", coll: "magic", t: "r", fact: "The rarest friend of all — she only visits the cleverest mathematicians!" },
   { id: "t_fairy", name: "Fairy", coll: "magic", t: "r", fact: "She sprinkles sparkle dust on children who keep on trying." },
   { id: "t_chest", name: "Treasure Chest", coll: "magic", t: "r", fact: "Full of golden coins — and golden answers!" }
@@ -594,6 +596,10 @@ function activeColl() {
   if (!collComplete("sky")) return "sky";
   if (!collComplete("magic")) return "magic";
   return "bfly"; // everything found: the meadow keeps filling with old friends
+}
+// the next common treasure waiting to be discovered, in album order
+function nextTreasure(coll) {
+  return TREASURES.find(t => t.coll === coll && t.t === "c" && !(S.caught[t.id] > 0)) || null;
 }
 
 /* ---------- question pictures ---------- */
@@ -673,6 +679,25 @@ function subPicSVG(a, b) {
 }
 
 /* ---------- question generators ---------- */
+// invisible difficulty 0 (gentle) → 1 (full stretch): grows with topic mastery,
+// ramps up through the round, and quietly eases after a miss. Never shown to the child.
+function hardness() {
+  const st = topicStat(mode);
+  const mastery = Math.min(1, st.correct / 40);
+  const ramp = Math.min(1, qnum / (TOTAL - 1));
+  let h = mastery * 0.65 + ramp * 0.35;
+  if (lastGood === false) h *= 0.6;
+  return Math.max(0, Math.min(1, h));
+}
+// random integer in a range that slides from [lo0,hi0] (easy) to [lo1,hi1] (hard)
+function hrnd(h, lo0, hi0, lo1, hi1) {
+  return rnd(Math.round(lo0 + (lo1 - lo0) * h), Math.round(hi0 + (hi1 - hi0) * h));
+}
+// mastery level per topic: 1 budding, 2 blooming (15+ correct), 3 golden (40+)
+function topicLvl(m) {
+  const c = topicStat(m).correct;
+  return c >= 40 ? 3 : c >= 15 ? 2 : 1;
+}
 function numOptions(correct, pool) {
   const opts = [String(correct)];
   const cand = shuffle(pool.filter(v => v > 0 && v !== correct));
@@ -683,7 +708,8 @@ function numOptions(correct, pool) {
 }
 function tableMode(n, year, sp, label) {
   return { label, year, sp, gen(p) {
-    const a = p ? p.a : rnd(1, 12);
+    // easy facts (×1–5) first; the tricky ×6–12 arrive as she grows
+    const a = p ? p.a : hrnd(hardness(), 1, 5, 3, 12);
     const c = a * n;
     return { p: { a }, text: a + " × " + n + " = ?", say: "What is " + words(a) + " times " + words(n) + "?",
              correct: String(c), options: numOptions(c, [c - n, c + n, c - 1, c + 1, c + 10]) };
@@ -695,39 +721,59 @@ const MODES = {
   x10: tableMode(10, 2, "brimstone", "10 times"),
   add: { label: "Adding", year: 2, sp: "red_admiral", gen(p) {
     const kind = p ? p.kind : (r => r < 0.35 ? "pic" : r < 0.55 ? "tens" : "ones")(Math.random());
+    const h = hardness();
     if (kind === "pic") {
-      const a = p ? p.a : rnd(3, 10), b = p ? p.b : rnd(2, 10);
+      const a = p ? p.a : hrnd(h, 2, 6, 4, 10), b = p ? p.b : hrnd(h, 2, 4, 3, 10);
       const c = a + b;
       return { p: { kind, a, b }, text: a + " + " + b + " = ?",
                say: "Count the apples! " + cap(words(a)) + " red apples add " + words(b) + " green apples. How many apples altogether?",
                correct: String(c), options: numOptions(c, [c - 1, c + 1, c + 2, c - 2, a, b]),
                picture: addPicSVG(a, b) };
     }
-    const a = p ? p.a : (kind === "tens" ? rnd(11, 69) : rnd(11, 89));
-    const b = p ? p.b : (kind === "tens" ? rnd(1, Math.floor((99 - a) / 10)) * 10 : rnd(2, 9));
+    let a = p ? p.a : (kind === "tens" ? hrnd(h, 11, 39, 21, 69) : hrnd(h, 11, 49, 21, 89));
+    let b = p ? p.b : 0;
+    if (!p) {
+      if (kind === "tens") b = rnd(1, Math.floor((99 - a) / 10)) * 10;
+      else if (h < 0.4) {
+        // gentle: stay inside the ten (nudge the ones digit so there is room)
+        if (a % 10 > 7) a = a - a % 10 + rnd(1, 7);
+        b = rnd(2, 9 - a % 10);
+      } else b = rnd(2, 9);
+    }
     const c = a + b;
     return { p: { kind, a, b }, text: a + " + " + b + " = ?", say: "What is " + words(a) + " add " + words(b) + "?",
              correct: String(c), options: numOptions(c, [c - 1, c + 1, c + 10, c - 10, c + 2]) };
   } },
   sub: { label: "Taking away", year: 2, sp: "tortoiseshell", gen(p) {
     const kind = p ? p.kind : (r => r < 0.35 ? "pic" : r < 0.55 ? "tens" : "ones")(Math.random());
+    const h = hardness();
     if (kind === "pic") {
-      const a = p ? p.a : rnd(5, 12), b = p ? p.b : rnd(2, a - 2);
+      const a = p ? p.a : hrnd(h, 4, 8, 7, 12);
+      const b = p ? p.b : rnd(2, Math.max(2, h < 0.4 ? Math.min(4, a - 2) : a - 2));
       const c = a - b;
       return { p: { kind, a, b }, text: a + " − " + b + " = ?",
                say: "There were " + words(a) + " biscuits, and " + words(b) + " got nibbled! How many biscuits are left?",
                correct: String(c), options: numOptions(c, [c - 1, c + 1, c + 2, b, a]),
                picture: subPicSVG(a, b) };
     }
-    const a = p ? p.a : (kind === "tens" ? rnd(31, 99) : rnd(11, 99));
-    const b = p ? p.b : (kind === "tens" ? rnd(1, Math.min(3, Math.floor((a - 1) / 10))) * 10 : rnd(2, 9));
+    const a = p ? p.a : (kind === "tens" ? hrnd(h, 31, 69, 41, 99) : hrnd(h, 11, 49, 21, 99));
+    let b = p ? p.b : 0;
+    if (!p) {
+      if (kind === "tens") b = rnd(1, Math.min(3, Math.floor((a - 1) / 10))) * 10;
+      else {
+        const o = a % 10;
+        // gentle: no borrowing needed; harder: cross under the ten
+        b = (h < 0.4 && o >= 2) ? rnd(2, o) : rnd(2, 9);
+      }
+    }
     const c = a - b;
     return { p: { kind, a, b }, text: a + " − " + b + " = ?", say: "What is " + words(a) + " take away " + words(b) + "?",
              correct: String(c), options: numOptions(c, [c - 1, c + 1, c + 10, c - 10, c - 2]) };
   } },
   div: { label: "Sharing", year: 2, sp: "orange_tip", gen(p) {
-    const n = p ? p.n : [2, 5, 10][rnd(0, 2)];
-    const q = p ? p.q : rnd(1, 10);
+    const h = hardness();
+    const n = p ? p.n : (h < 0.35 ? [2, 5][rnd(0, 1)] : [2, 5, 10][rnd(0, 2)]);
+    const q = p ? p.q : hrnd(h, 1, 5, 2, 10);
     const a = n * q;
     return { p: { n, q }, text: a + " ÷ " + n + " = ?",
              say: "Share " + words(a) + " berries between " + words(n) + " flowers. How many berries does each flower get?",
@@ -735,15 +781,18 @@ const MODES = {
              picture: shareSVG(a, n) };
   } },
   miss: { label: "Mystery number", year: 2, sp: "peacock", gen(p) {
-    const f = p ? p.f : ["a+?", "?+b", "a-?", "?-b", "n×?"][rnd(0, 4)];
+    const h = hardness();
+    // friendly "something more" puzzles first; take-away and times mysteries later
+    const forms = h < 0.35 ? ["a+?", "?+b"] : ["a+?", "?+b", "a-?", "?-b", "n×?"];
+    const f = p ? p.f : forms[rnd(0, forms.length - 1)];
     let text, say, x, pp;
     if (f === "a+?") {
-      const a = p ? p.a : rnd(3, 15); x = p ? p.x : rnd(2, 9);
+      const a = p ? p.a : hrnd(h, 3, 9, 5, 15); x = p ? p.x : hrnd(h, 2, 5, 3, 9);
       text = a + " + ? = " + (a + x);
       say = cap(words(a)) + " add the mystery number makes " + words(a + x) + ". What is the mystery number?";
       pp = { f, a, x };
     } else if (f === "?+b") {
-      const b = p ? p.b : rnd(2, 9); x = p ? p.x : rnd(3, 15);
+      const b = p ? p.b : hrnd(h, 2, 5, 3, 9); x = p ? p.x : hrnd(h, 3, 9, 5, 15);
       text = "? + " + b + " = " + (x + b);
       say = "The mystery number add " + words(b) + " makes " + words(x + b) + ". What is the mystery number?";
       pp = { f, b, x };
@@ -766,9 +815,10 @@ const MODES = {
     return { p: pp, text, say, correct: String(x), options: numOptions(x, [x - 1, x + 1, x + 2, x - 2, x + 10]) };
   } },
   pv: { label: "Tens & ones", year: 2, sp: "holly_blue", gen(p) {
+    const h = hardness();
     const kind = p ? p.kind : (Math.random() < 0.5 ? "make" : "compare");
     if (kind === "make") {
-      const t = p ? p.t : rnd(2, 9), o = p ? p.o : rnd(1, 9);
+      const t = p ? p.t : hrnd(h, 2, 5, 3, 9), o = p ? p.o : rnd(1, 9);
       const c = t * 10 + o;
       return { p: { kind, t, o }, text: t + " tens and " + o + " ones = ?",
                say: "What number is " + words(t) + " tens and " + words(o) + " ones?",
@@ -777,7 +827,11 @@ const MODES = {
     let a = p ? p.a : rnd(10, 99), b;
     if (p) { b = p.b; }
     else if (Math.random() < 0.18) { b = a; }
-    else { do { b = rnd(10, 99); } while (b === a); }
+    else if (h >= 0.6) {
+      // sneaky comparisons: same tens digit, only the ones differ (47 ▢ 43)
+      do { b = Math.floor(a / 10) * 10 + rnd(0, 9); } while (b === a);
+    }
+    else { do { b = rnd(10, 99); } while (b === a || Math.abs(a - b) < (h < 0.3 ? 20 : 1)); }
     const correct = a < b ? "<" : a > b ? ">" : "=";
     return { p: { kind, a, b }, text: a + " ▢ " + b,
              say: "Which sign goes in the middle? Is " + words(a) + " less than, greater than, or equal to " + words(b) + "?",
@@ -786,10 +840,12 @@ const MODES = {
              sayExplain: words(a) + " is " + sayVal(correct) + " " + words(b) + ". The crocodile mouth always eats the bigger number" };
   } },
   frac: { label: "Fractions", year: 2, sp: "comma", gen(p) {
+    const h = hardness();
     const kind = p ? p.kind : (Math.random() < 0.5 ? "pie" : "of");
     if (kind === "pie") {
       const PIES = [{ parts: 2, shaded: 1, f: "½" }, { parts: 3, shaded: 1, f: "⅓" }, { parts: 4, shaded: 1, f: "¼" }, { parts: 4, shaded: 3, f: "¾" }];
-      const i = p ? p.i : rnd(0, 3);
+      // halves and quarters first; thirds and three-quarters as she grows
+      const i = p ? p.i : (h < 0.35 ? [0, 2][rnd(0, 1)] : rnd(0, 3));
       const v = PIES[i];
       const others = shuffle(PIES.map(x => x.f).filter(f => f !== v.f)).slice(0, 2);
       return { p: { kind, i }, text: "What fraction is coloured in?",
@@ -800,9 +856,9 @@ const MODES = {
                picture: pieSVG(v.parts, v.shaded) };
     }
     const FRACS = [{ d: 2, w: "one half", sym: "½" }, { d: 4, w: "one quarter", sym: "¼" }, { d: 3, w: "one third", sym: "⅓" }];
-    const fi = p ? p.fi : rnd(0, 2);
+    const fi = p ? p.fi : (h < 0.35 ? 0 : rnd(0, 2));
     const fr = FRACS[fi];
-    const m = p ? p.m : rnd(1, 6);
+    const m = p ? p.m : hrnd(h, 1, 3, 2, 6);
     const n = fr.d * m;
     return { p: { kind, fi, m }, text: fr.sym + " of " + n + " = ?",
              say: "What is " + fr.w + " of " + words(n) + "?",
@@ -813,14 +869,28 @@ const MODES = {
   x4: tableMode(4, 3, "speckled_wood", "4 times"),
   x8: tableMode(8, 3, "gatekeeper", "8 times"),
   add2: { label: "Big adding", year: 3, sp: "swallowtail", gen(p) {
-    const a = p ? p.a : rnd(12, 79), b = p ? p.b : rnd(11, 99 - a);
+    const h = hardness();
+    let a = p ? p.a : rnd(12, 79), b = p ? p.b : rnd(11, 99 - a);
+    // gentle: no carrying; expert: always a carry to practise
+    for (let i = 0; !p && i < 25; i++) {
+      const carry = (a % 10) + (b % 10) >= 10;
+      if (h < 0.4 ? !carry : (h > 0.75 ? carry : true)) break;
+      a = rnd(12, 79); b = rnd(11, 99 - a);
+    }
     const c = a + b;
     return { p: { a, b }, col: { a, b, op: "+" }, text: a + " + " + b + " = ?",
              say: "What is " + words(a) + " add " + words(b) + "?",
              correct: String(c), options: numOptions(c, [c - 1, c + 1, c + 10, c - 10, c + 2]) };
   } },
   sub2: { label: "Big taking away", year: 3, sp: "fritillary", gen(p) {
-    const a = p ? p.a : rnd(25, 99), b = p ? p.b : rnd(11, a - 12);
+    const h = hardness();
+    let a = p ? p.a : rnd(25, 99), b = p ? p.b : rnd(11, a - 12);
+    // gentle: no exchanging; expert: always an exchange to practise
+    for (let i = 0; !p && i < 25; i++) {
+      const exch = (a % 10) < (b % 10);
+      if (h < 0.4 ? !exch : (h > 0.75 ? exch : true)) break;
+      a = rnd(25, 99); b = rnd(11, a - 12);
+    }
     const c = a - b;
     return { p: { a, b }, col: { a, b, op: "−" }, text: a + " − " + b + " = ?",
              say: "What is " + words(a) + " take away " + words(b) + "?",
@@ -1006,13 +1076,19 @@ function awardCatch() {
     const st = topicStat(mode);
     if (st.correct >= 15 && Math.random() < 0.25) ids.push(WANDERERS[rnd(0, 1)]);
   } else {
-    // each common treasure belongs to a topic, like the butterflies: practise it to find it
-    const tTopic = TREASURES.find(t => t.coll === coll && t.topic === mode);
+    // treasures arrive IN ORDER, each tied to a topic; the final three of a page
+    // also need a blooming flower (level 2+) in their topic — better ones cost more
+    const nt = nextTreasure(coll);
+    const idx = nt ? TREASURES.filter(t => t.coll === coll && t.t === "c").indexOf(nt) : -1;
+    const gated = nt && idx >= 4 && topicLvl(nt.topic) < 2;
     const owned = TREASURES.filter(t => t.coll === coll && S.caught[t.id] > 0);
-    if (tTopic && !(S.caught[tTopic.id] > 0) && Math.random() < 0.4) ids.push(tTopic.id);
+    if (nt && nt.topic === mode && !gated && Math.random() < 0.4) ids.push(nt.id);
     else if (owned.length && Math.random() < 0.5) ids.push(owned[rnd(0, owned.length - 1)].id);
     else ids.push(SPECIES[rnd(0, SPECIES.length - 1)].id); // an old butterfly friend visits
   }
+  // caught at a golden flower (level 3)? it becomes a shiny
+  S.shiny = S.shiny || {};
+  if (TR[ids[0]] && !(S.caught[ids[0]] > 0) && topicLvl(mode) >= 3) S.shiny[ids[0]] = true;
   const news = [];
   for (const id of ids) {
     const isNew = !(S.caught[id] > 0);
@@ -1319,6 +1395,10 @@ function end() {
     catchLine += " 🌟 You have found EVERY butterfly — a secret new page has appeared in your album: " + COLL_NAME[coll] + "!";
     say += " And something AMAZING has happened" + nameBit() + ". You have found every single butterfly! So a secret new page has appeared in your album: " + COLL_NAME[coll] + "! Keep answering questions to fill it with wonders.";
   }
+  if (topicLvl(mode) > roundStartLvl) {
+    catchLine += " 🌸 Your “" + MODES[mode].label + "” flower has grown!";
+    say += " And listen to this: your " + MODES[mode].label + " flower has grown a whole new ring of petals" + nameBit() + " — you are getting stronger and stronger!";
+  }
   speak(say);
   if (score >= 5) sFanfare();
   $("answers").innerHTML =
@@ -1332,8 +1412,10 @@ function end() {
   $("again").onclick = () => { sTap(); restart(); };
   $("toAlbum").onclick = () => { sTap(); openAlbum(); };
 }
+let roundStartLvl = 1;
 function restart() {
   qnum = 0; score = 0; roundNew = []; roundIds = [];
+  roundStartLvl = topicLvl(mode);
   $("bfield").innerHTML = "";
   populateMeadow();
   setStars();
@@ -1381,9 +1463,15 @@ function renderAlbum() {
     };
   });
   // treasure pages: visible once the previous collection is complete, teased before
-  const tHint = t => t.t === "r" ? "Catch 9 stars in one round to find this one!"
-    : t.topic ? "Practise “" + MODES[t.topic].label + "” to find this one!"
-    : "Keep answering questions — it will appear like magic!";
+  const tHint = t => {
+    if (t.t === "r") return "Catch 9 stars in one round to find this one!";
+    const nt = nextTreasure(t.coll);
+    if (!nt || nt.id !== t.id) return "Find the treasures before this one first…";
+    const idx = TREASURES.filter(x => x.coll === t.coll && x.t === "c").indexOf(t);
+    if (idx >= 4 && topicLvl(t.topic) < 2)
+      return "Get even better at “" + MODES[t.topic].label + "” to find this one — grow its flower!";
+    return "Practise “" + MODES[t.topic].label + "” to find this one!";
+  };
   const ticon = { sky: "🌙", magic: "🦄" };
   let th = "";
   for (const [cid, prev] of [["sky", "bfly"], ["magic", "sky"]]) {
@@ -1399,8 +1487,9 @@ function renderAlbum() {
       items.map(t => {
         const n = S.caught[t.id] || 0;
         if (n > 0) {
-          return '<div class="card" data-t="' + t.id + '">' + anyCardSVG(t.id) +
-            (t.t === "r" ? '<div class="badge">★ RARE</div>' : "") +
+          const shiny = S.shiny && S.shiny[t.id];
+          return '<div class="card' + (shiny ? " shiny" : "") + '" data-t="' + t.id + '">' + anyCardSVG(t.id) +
+            (t.t === "r" ? '<div class="badge">★ RARE</div>' : shiny ? '<div class="badge">✨ SHINY</div>' : "") +
             '<div class="nm">' + t.name + '</div><div class="ct">found ×' + n + '</div></div>';
         }
         return '<div class="card locked" data-t="' + t.id + '">' + anyCardSVG(t.id, true) +
