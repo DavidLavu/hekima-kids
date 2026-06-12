@@ -118,9 +118,10 @@ function renderAlbum() {
   }).join("");
 }
 function openAlbum() {
+  pauseRound(); // hush the question voice and hold the round while she browses
   renderAlbum();
   $("albumPage").classList.remove("hidden");
 }
 $("albumBtn").onclick = () => { sTap(); openAlbum(); };
-$("albumClose").onclick = () => { sTap(); $("albumPage").classList.add("hidden"); };
+$("albumClose").onclick = () => { sTap(); $("albumPage").classList.add("hidden"); resumeRound(); };
 

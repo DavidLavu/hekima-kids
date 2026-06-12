@@ -353,7 +353,22 @@ function finishQ() {
   setStars();
   setFooter();
   qnum++;
-  setTimeout(next, q.col ? 2600 : 2000);
+  advPending = true;
+  advT = setTimeout(() => { advPending = false; next(); }, q.col ? 2600 : 2000);
+}
+/* ---------- pausing: the Album and Grown-ups pages stop the round politely ---------- */
+function pauseRound() {
+  clearTimeout(promptT);          // no 25-second re-read while she browses
+  if (advPending) clearTimeout(advT); // hold the next question until the page closes
+  try { if ("speechSynthesis" in window) speechSynthesis.cancel(); } catch (e) {}
+}
+function resumeRound() {
+  try { if ("speechSynthesis" in window) speechSynthesis.cancel(); } catch (e) {}
+  if (advPending) {
+    advT = setTimeout(() => { advPending = false; next(); }, 700);
+  } else if (q && !locked && qnum < TOTAL) {
+    armNudge();
+  }
 }
 function end() {
   clearTimeout(promptT);

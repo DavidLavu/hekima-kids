@@ -16,6 +16,7 @@ function vary(key, arr) {
 }
 let mode = "x2", qnum = 0, score = 0, locked = false, q = null;
 let roundNew = [], roundIds = [], promptT = null, lastGood = null;
+let advT = null, advPending = false; // the between-questions timer, held while Album/Grown-ups are open
 
 /* ---------- stars & footer ---------- */
 function starSVG(filled) {
