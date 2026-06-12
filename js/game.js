@@ -49,7 +49,7 @@ function buildModes() {
       return '<button class="mode-btn' + (id === mode ? " on" : "") + (y === 3 ? " y3" : "") + (y === "q" ? " yq" : "") + (locked ? " locked" : "") + '" data-m="' + id + '">' +
       '<span class="ic">' + (MODE_ICONS[id] || "🦋") + '</span>' +
       m.label + (m.quiz && quizCleared(id) ? " ✓" : "") +
-      (locked ? '<span class="lock">🔒</span>' : '<span class="dot" id="dot-' + id + '"></span>') + '</button>';
+      (locked ? '<span class="lock">🔒</span>' : '<span class="prog" id="dot-' + id + '"><span class="fill"></span></span>') + '</button>';
     }).join("") +
     '</div></div>').join("");
   document.querySelectorAll(".mode-btn").forEach(b => {
@@ -81,12 +81,20 @@ function updateChipFades() {
   });
 }
 window.addEventListener("resize", updateChipFades);
+// each chip wears a tiny progress bar: it fills toward golden (half-way = level 2,
+// matching topicLvl's fast track) and turns gold when the topic is golden
 function updateDots() {
   for (const id of Object.keys(MODES)) {
     const el = $("dot-" + id);
     if (!el) continue;
     const c = (S.topics[id] || {}).correct || 0;
-    el.style.background = c >= 40 ? "#e8b73a" : c >= 20 ? "#6aa84f" : c >= 1 ? "#b8d8a0" : "#e4dcc8";
+    const lvl = topicLvl(id);
+    const fill = lvl >= 3 ? 1
+               : lvl === 2 ? 0.5 + 0.5 * Math.min(1, Math.max(0, (c - 15) / 25))
+               : 0.5 * Math.min(1, c / 15);
+    const bar = el.firstElementChild;
+    bar.style.width = Math.round(fill * 100) + "%";
+    bar.style.background = lvl >= 3 ? "#e8b73a" : c >= 1 ? "#6aa84f" : "transparent";
   }
 }
 

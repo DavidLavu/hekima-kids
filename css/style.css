@@ -63,7 +63,11 @@ main > #msg { margin-bottom: auto; padding-bottom: 4px; }
 .mode-btn.locked { opacity: 0.55; }
 .mode-btn .lock { margin-left: 2px; }
 .mode-btn.on { background: #4a7ba6; border-color: #4a7ba6; color: #fff; }
-.mode-btn .dot { width: 9px; height: 9px; border-radius: 50%; background: #e4dcc8; display: inline-block; }
+.mode-btn .prog {
+  width: 28px; height: 7px; border-radius: 4px; background: #e4dcc8;
+  display: inline-block; overflow: hidden; flex: none;
+}
+.mode-btn .prog .fill { display: block; height: 100%; border-radius: 4px; transition: width .5s; }
 #stars { display: flex; gap: 7px; justify-content: center; margin: clamp(4px, 1.2vh, 10px) 0 4px; }
 .star { width: clamp(15px, 2.4vh, 22px); height: clamp(15px, 2.4vh, 22px); }
 #qcount { text-align: center; font-size: 13px; color: #a08f6e; margin: 0 0 2px; min-height: 16px; }
@@ -269,7 +273,7 @@ table.stats th { color: #a08f6e; font-weight: 600; font-size: 12px; }
                   mask-image: none; -webkit-mask-image: none; }
   .mode-btn { font-size: 15px; padding: 10px 14px; justify-content: flex-start; }
   .mode-btn .ic { font-size: 19px; }
-  .mode-btn .dot { margin-left: auto; }
+  .mode-btn .prog { margin-left: auto; }
   /* pictures (coins, clocks, fractions) grow to study size */
   #picture:has(> svg) { height: clamp(110px, 24vh, 250px); }
   #picture > svg { height: 100% !important; width: auto; max-width: 100%; }

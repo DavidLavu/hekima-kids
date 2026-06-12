@@ -256,7 +256,11 @@ const MODES = {
       // recognise the coin by its look — no numbers printed on it
       const denoms = [1, 2, 5, 10, 20, 50, 100, 200];
       const v = p ? p.v : denoms[rnd(0, h < 0.5 ? 5 : 7)];
-      const wrong = shuffle(denoms.filter(d => d !== v)).slice(0, 2);
+      // wrong answers favour the same colour family (silver/copper/gold), so she
+      // can't pick by colour — she has to know the shape and size
+      const fam = d => d < 5 ? 0 : d < 100 ? 1 : 2;
+      const wrong = shuffle(denoms.filter(d => d !== v && fam(d) === fam(v)))
+        .concat(shuffle(denoms.filter(d => d !== v && fam(d) !== fam(v)))).slice(0, 2);
       return { p: { kind, v }, text: "How much is this coin worth?",
                say: "Look at this coin very carefully — its shape, its colour, its size. How much is it worth?",
                correct: fmt(v), options: shuffle([fmt(v), ...wrong.map(fmt)]),
@@ -318,7 +322,12 @@ const MODES = {
               : f === "qpast" ? "quarter past " + t : "quarter to " + (t % 12 + 1);
     const correct = nm(hr);
     const w1 = nm(hr % 12 + 1);
-    const w2 = f === "o" ? "half past " + hr : hr + " o’clock";
+    // for the quarter forms the trap is the classic past/to mix-up on the same
+    // clock face — not "o'clock", which the minute hand rules out at a glance
+    const w2 = f === "o" ? "half past " + hr
+             : f === "half" ? hr + " o’clock"
+             : f === "qpast" ? "quarter to " + (hr % 12 + 1)
+             : "quarter past " + hr;
     return { p: { f, hr }, text: "What time is it?",
              say: "Look at the clock! What time does it say?",
              correct, options: shuffle([correct, w1, w2]),
@@ -381,7 +390,11 @@ const MODES = {
     const s = p ? SHAPES.find(x => x.id === p.s) : avail[rnd(0, avail.length - 1)];
     const f = p ? p.f : (s.id === "circle" ? "name" : ["name", "sides", "corners"][rnd(0, 2)]);
     if (f === "name") {
-      const others = shuffle(SHAPES.filter(x => x.id !== s.id)).slice(0, 2).map(x => x.name);
+      // distractors are the closest shapes by side count (pentagon/hexagon/heptagon),
+      // so naming takes counting, not just "the round one vs the pointy one"
+      const others = shuffle(SHAPES.filter(x => x.id !== s.id))
+        .sort((a, b) => Math.abs((a.sides || 0) - (s.sides || 0)) - Math.abs((b.sides || 0) - (s.sides || 0)))
+        .slice(0, 2).map(x => x.name);
       return { p: { f, s: s.id }, text: "What shape is this?", say: "What is this shape called?",
                correct: s.name, options: shuffle([s.name, ...others]),
                explain: "it is a " + s.name,
