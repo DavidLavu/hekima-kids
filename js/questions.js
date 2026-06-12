@@ -17,16 +17,23 @@ function hardness() {
   const ramp = Math.min(1, qnum / (TOTAL - 1));
   let h = mastery * 0.65 + ramp * 0.35;
   if (lastGood === false) h *= 0.6;
-  return Math.max(0, Math.min(1, h));
+  // a proven topic never restarts at beginner questions: each mastery level
+  // sets a floor — level 2 rounds open mid-stretch, level 3 near full stretch
+  const floor = [0, 0, 0.45, 0.75][topicLvl(mode)] * (lastGood === false ? 0.85 : 1);
+  return Math.max(floor, Math.min(1, h));
 }
 // random integer in a range that slides from [lo0,hi0] (easy) to [lo1,hi1] (hard)
 function hrnd(h, lo0, hi0, lo1, hi1) {
   return rnd(Math.round(lo0 + (lo1 - lo0) * h), Math.round(hi0 + (hi1 - hi0) * h));
 }
-// mastery level per topic: 1 budding, 2 blooming (15+ correct), 3 golden (40+)
+// mastery level per topic: 1 budding, 2 blooming, 3 golden. Earned the long way
+// by volume (15/40 correct) or the fast way by proven accuracy — a child scoring
+// 90% shouldn't have to grind forty answers before the questions grow up with her
 function topicLvl(m) {
-  const c = topicStat(m).correct;
-  return c >= 40 ? 3 : c >= 15 ? 2 : 1;
+  const st = topicStat(m), acc = st.asked ? st.correct / st.asked : 0;
+  if (st.correct >= 40 || (st.asked >= 12 && acc >= 0.9)) return 3;
+  if (st.correct >= 15 || (st.asked >= 8 && acc >= 0.85)) return 2;
+  return 1;
 }
 function numOptions(correct, pool) {
   const opts = [String(correct)];
@@ -40,9 +47,22 @@ function tableMode(n, year, sp, label) {
   return { label, year, sp, gen(p) {
     // easy facts (×1–9) first; the tricky ×10–12 arrive as she grows.
     // the band stays ≥10 wide so a full round never has to repeat a fact
-    const a = p ? p.a : hrnd(hardness(), 1, 9, 3, 12);
+    const h = hardness();
+    const a = p ? p.a : hrnd(h, 1, 9, 3, 12);
     const c = a * n;
-    return { p: { a }, text: a + " × " + n + " = ?", say: "What is " + words(a) + " times " + words(n) + "?",
+    // greater depth (DfE: "recall and use multiplication AND DIVISION facts"):
+    // once stretched, the same fact arrives backwards — missing factor or division
+    const k = p ? (p.k || "mul")
+                : h >= 0.7 ? (r => r < 0.5 ? "mul" : r < 0.75 ? "miss" : "div")(Math.random()) : "mul";
+    if (k === "miss")
+      return { p: { a, k }, text: "? × " + n + " = " + c,
+               say: "What number times " + words(n) + " makes " + words(c) + "?",
+               correct: String(a), options: numOptions(a, [a - 1, a + 1, a + 2, n, c - n]) };
+    if (k === "div")
+      return { p: { a, k }, text: c + " ÷ " + n + " = ?",
+               say: "What is " + words(c) + " divided by " + words(n) + "?",
+               correct: String(a), options: numOptions(a, [a - 1, a + 1, a + 2, n]) };
+    return { p: { a, k }, text: a + " × " + n + " = ?", say: "What is " + words(a) + " times " + words(n) + "?",
              correct: String(c), options: numOptions(c, [c - n, c + n, c - 1, c + 1, c + 10]) };
   } };
 }
