@@ -26,13 +26,28 @@ function next() {
   q = drawQuestion();
   $("qcount").textContent = "Question " + (qnum + 1) + " of " + TOTAL;
   $("msg").textContent = "";
-  $("answers").classList.toggle("pad", !!q.col);
+  // golden topics: about half the questions ask her to TYPE the answer on the
+  // number pad (recall, like the Y4 tables check) instead of choosing from three.
+  // Only after the in-between stages are passed — never in quizzes or column work.
+  if (!q.col && !MODES[mode].quiz && topicLvl(mode) >= 3 && /^£?\d+p?$/.test(q.correct) && Math.random() < 0.5)
+    q.typed = { v: "", wrongs: 0 };
+  $("answers").classList.toggle("pad", !!q.col || !!q.typed);
   if (q.col) {
     $("question").textContent = "";
     renderColumn();
     $("answers").innerHTML = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map(d =>
       '<button class="ans-btn" data-v="' + d + '">' + d + "</button>").join("");
     document.querySelectorAll(".ans-btn").forEach(btn => { btn.onclick = () => colTap(btn); });
+  } else if (q.typed) {
+    $("question").textContent = q.text;
+    $("question").classList.toggle("long", q.text.length > 12);
+    $("picture").innerHTML = q.picture || "";
+    renderTyped();
+    q.say = vary("typedLead", [
+      "You are so good at this, you can type the answer yourself! ",
+      "Star question — tap the answer on the number pad! ",
+      "This one you type, like a big mathematician! "
+    ]) + q.say;
   } else {
     $("question").textContent = q.text;
     $("question").classList.toggle("long", q.text.length > 12);
@@ -152,6 +167,70 @@ function colTap(btn) {
   }
 }
 
+/* ---------- typed answers (golden topics): recall it, don't recognise it ---------- */
+function renderTyped() {
+  const m = /^(£?)(\d+)(p?)$/.exec(q.correct);
+  q.typed.pre = m[1];
+  q.typed.suf = m[3];
+  $("answers").innerHTML =
+    '<div class="tline">' + q.typed.pre + '<span class="tbox" id="tbox">&nbsp;</span>' + q.typed.suf + '</div>' +
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map(d =>
+      '<button class="ans-btn" data-v="' + d + '">' + d + "</button>").join("") +
+    '<button class="ans-btn tback" id="tback">⌫</button><button class="ans-btn tok" id="tok">✓</button>';
+  document.querySelectorAll("#answers .ans-btn[data-v]").forEach(b => { b.onclick = () => typedTap(b.dataset.v); });
+  $("tback").onclick = () => {
+    if (locked || !q.typed.v) return;
+    sTap();
+    q.typed.v = q.typed.v.slice(0, -1);
+    $("tbox").textContent = q.typed.v || " ";
+  };
+  $("tok").onclick = typedSubmit;
+}
+function typedTap(d) {
+  if (locked || q.typed.v.length >= 3) return;
+  sTap();
+  q.typed.v += d;
+  $("tbox").textContent = q.typed.v;
+}
+function typedSubmit() {
+  if (locked) return;
+  if (!q.typed.v) { speak("Tap the numbers to type your answer first!"); return; }
+  const given = q.typed.pre + parseInt(q.typed.v, 10) + q.typed.suf;
+  if (given === q.correct) {
+    locked = true;
+    clearTimeout(promptT);
+    topicStat(mode).asked++;
+    resolveGood();
+    return;
+  }
+  // two tries, like column working; then the familiar three choices appear —
+  // help means a kind word and spaced repetition, but no butterfly
+  sWrong();
+  q.typed.wrongs++;
+  const tb = $("tbox");
+  tb.classList.add("bad");
+  setTimeout(() => tb.classList.remove("bad"), 600);
+  if (q.typed.wrongs >= 2) {
+    q.helped = true;
+    $("msg").textContent = "Tricky one — here are some ideas!";
+    $("msg").style.color = "#5a4a2f";
+    $("answers").classList.remove("pad");
+    $("answers").innerHTML = q.options.map(v =>
+      '<button class="ans-btn' + (String(v).length > 6 ? " txt" : "") + '" data-v="' + v + '">' + v + "</button>").join("");
+    document.querySelectorAll(".ans-btn").forEach(btn => { btn.onclick = () => pick(btn); });
+    speak(vary("typedHelp", [
+      "Tricky one! Here are some ideas — pick the right answer.",
+      "Let me help. One of these is the answer!",
+      "Have a look at these three — which one is it?"
+    ]));
+    armNudge();
+  } else {
+    q.typed.v = "";
+    tb.innerHTML = "&nbsp;";
+    speak(vary("tryAgain", ["Not quite — try again!", "Almost! Have another go.", "Hmm — try once more!"]));
+  }
+}
+
 function pick(btn) {
   if (locked) return;
   locked = true;
@@ -161,7 +240,12 @@ function pick(btn) {
   st.asked++;
   if (v === q.correct) {
     btn.classList.add("good");
-    resolveGood();
+    if (q.helped) {
+      resolveBad({
+        text: "You found it — the answer is " + q.correct + "! We’ll practise that one again.",
+        say: "You found it" + nameBit() + "! " + cap(q.sayExplain || ("The answer is " + sayVal(q.correct))) + ". We will practise that one again soon."
+      });
+    } else resolveGood();
   } else {
     btn.classList.add("bad");
     document.querySelectorAll(".ans-btn").forEach(b => { if (b.dataset.v === q.correct) b.classList.add("good"); });

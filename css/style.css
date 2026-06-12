@@ -112,6 +112,18 @@ main > #msg { margin-bottom: auto; padding-bottom: 4px; }
 .newdig { position: absolute; top: -4px; left: 2px; font-size: 16px; color: #b34a37; font-weight: 700; }
 #answers.pad { grid-template-columns: repeat(5, minmax(0,1fr)); gap: 8px; }
 #answers.pad .ans-btn { font-size: clamp(20px, 3.2vh, 28px); padding: clamp(8px, 1.8vh, 14px) 0; border-radius: 14px; }
+/* typed answers (golden topics): answer box + number pad, recall not recognition */
+#answers .tline {
+  grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 6px;
+  font-size: clamp(30px, 5.4vh, 42px); font-weight: 700; color: #4a3f2a;
+}
+.tbox {
+  display: inline-block; min-width: 96px; min-height: 1.25em; text-align: center;
+  background: #fff; border: 2px solid #d8cdb4; border-radius: 14px; padding: 2px 14px;
+}
+.tbox.bad { border-color: #b34a37; background: #f9e3e0; }
+#answers.pad .tback { grid-column: span 2; }
+#answers.pad .tok { grid-column: span 3; background: #e2f2e6; border-color: #3b8f5a; color: #2c6b44; }
 .endmsg { grid-column: 1 / -1; text-align: center; font-size: 19px; font-weight: 600; color: #3a3226; margin: 2px 0; }
 .endsummary { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 .endsummary .mini { text-align: center; font-size: 11px; color: #5a4a2f; width: 74px; }
@@ -276,6 +288,10 @@ table.stats th { color: #a08f6e; font-weight: 600; font-size: 12px; }
   .mode-btn .prog { margin-left: auto; }
   /* pictures (coins, clocks, fractions) grow to study size */
   #picture:has(> svg) { height: clamp(110px, 24vh, 250px); }
+  /* typed-pad questions need the vertical room: trim the study-size picture
+     and slim the pad so the ✓ row never slips under the meadow */
+  main:has(.tline) #picture:has(> svg) { height: clamp(80px, 14vh, 150px); }
+  main:has(.tline) #answers.pad .ans-btn { padding: clamp(6px, 1.4vh, 11px) 0; }
   #picture > svg { height: 100% !important; width: auto; max-width: 100%; }
   /* column working: the sidebar-spanning grid mis-measures the stacked sum's
      auto row, so the slots spilled over the digit pad — give the row its real height */
