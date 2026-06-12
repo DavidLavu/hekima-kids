@@ -51,16 +51,16 @@ function schoolReport() {
   }
   const lines = areas.map(x => {
     const ev = Math.round(100 * x.c / Math.max(1, x.a)) + "% of " + x.a + " questions";
-    const body = x.j === 2 ? "can " + x.can + " — confidently and accurately (" + ev + ")."
-               : x.j === 1 ? "can " + x.can + " securely (" + ev + ")."
-               : x.j === 0 ? "is still developing this: " + x.can + " (" + ev + ")."
+    const body = x.j === 2 ? kid + " can " + x.can + " — confidently and accurately (" + ev + ")."
+               : x.j === 1 ? kid + " can " + x.can + " securely (" + ev + ")."
+               : x.j === 0 ? kid + " is still developing this: " + x.can + " (" + ev + ")."
                : "not enough evidence yet — fewer than 6 questions answered.";
     const chip = x.j >= 0 ? '<span class="tj tj' + x.j + '">' + (x.j === 2 ? "greater depth" : x.j === 1 ? "expected standard" : "working towards") + "</span> " : '<span class="tj tjx">no judgement yet</span> ';
     return "<li><strong>" + x.name + "</strong> " + chip + body + "</li>";
   });
   return '<h3 class="sect">School report — Year 2 mathematics</h3>' +
     '<p>' + overall + '</p><ul class="taf">' + lines.join("") + '</ul>' +
-    '<p class="note">Judgements use the wording of the DfE programme of study and teacher assessment framework, from her answers in this app only. A school judgement would also draw on measures (length, mass, capacity, temperature), statistics, 3-D shapes and position &amp; turns — not in the app yet.</p>';
+    '<p class="note">Judgements use the wording of the DfE programme of study and teacher assessment framework, based on answers given in this app.</p>';
 }
 function renderGrown() {
   const today = dateStr();
@@ -126,7 +126,6 @@ function renderGrown() {
                    : "open, not tried yet";
       return "<li><strong>" + MODES[id].label + "</strong> — " + status + "</li>";
     }).join("") + '</ul>' +
-    '<p class="note">The quizzes sample every topic in the app — the DfE Year 2 work: 2/5/10 (and 3/4/8) times tables, adding &amp; taking away including two-digit column sums, missing numbers, tens &amp; ones with &lt; &gt; =, numbers in words, odd &amp; even, fractions, sharing, money, time and 2-D shapes. Questions missed in a quiz are re-asked in that topic’s own practice. Not in the app yet (so not tested): 3-D solids, measuring, statistics and turns.</p>' +
     '<h3 class="sect">Accuracy by topic</h3>' +
     (rows ? '<table class="stats"><tr><th>Topic</th><th>Answered</th><th>Correct</th><th>Accuracy</th><th>This week</th><th>Level</th></tr>' + rows + '</table>' +
             '<p class="note">Level sets how hard her questions are: 🌼 blooming topics start every round mid-stretch, ⭐ golden ones stay near full stretch (times tables add missing-number and division forms). High accuracy moves a topic up quickly — no grinding needed.</p>'
@@ -139,7 +138,6 @@ function renderGrown() {
     '<h3 class="sect">Voice</h3>' +
     '<div id="voiceQuick"></div>' +
     '<select id="voiceSel"></select> <button class="gbtn" id="voiceTest">Hear it</button>' +
-    '<p class="note">Voices come from the device itself. On an iPad you can install much nicer ones first: Settings → Accessibility → Spoken Content → Voices → English (UK) — “Kate”, “Serena” or “Martha” are lovely. They appear in this list once downloaded.</p>' +
     '<h3 class="sect">Data</h3>' +
     '<p class="note">Everything is stored only on this device (localStorage). No accounts, no internet, nothing leaves the tablet.</p>' +
     '<button class="gbtn danger" id="resetBtn">Start completely fresh…</button>';
