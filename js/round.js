@@ -406,10 +406,22 @@ function end() {
       (nxt ? " " + MODES[nxt].label + " is now open for you!" : " You have finished every quiz — you are a true Year 2 champion!");
     buildModes();
   }
+  // the crowning moment: every butterfly and every treasure has been found
+  let legend = false;
+  if (!(S.caught.t_legend > 0) && ["bfly", "sky", "magic", "sea", "wood", "dino", "friends"].every(collComplete)) {
+    legend = true;
+    S.caught.t_legend = 1;
+    roundNew.push("t_legend");
+    roundIds.push("t_legend");
+    addCaughtToScene("t_legend");
+    saveState();
+    catchLine += " 🏆 The GOLDEN BUTTERFLY has appeared — you have found absolutely everything!";
+    say += " And now, the most magical thing of all" + nameBit() + ". You have found every butterfly and every treasure in the whole meadow. So the legendary Golden Butterfly has flown down, just for you. You are a true meadow legend!";
+  }
   speak(say);
   if (score >= 5) sFanfare();
-  if (score >= 8) flypast();
-  if (firstClear || newPage || rare) sparkleBursts(firstClear || newPage);
+  if (score >= 8 || legend) flypast();
+  if (firstClear || newPage || rare || legend) sparkleBursts(firstClear || newPage || legend);
   $("answers").innerHTML =
     '<div class="endmsg">' + catchLine + '</div>' +
     (uniq.length ? '<div class="endsummary">' + uniq.map(id => {

@@ -30,7 +30,7 @@ function addToMeadow(spId, opts = {}) {
 function addTreasureToScene(id, opts = {}) {
   const t = TR[id];
   if (!t) return;
-  const sky = t.coll === "sky";
+  const sky = t.coll === "sky" || t.coll === "legend"; // the Golden Butterfly flies high
   const vt = meadowTop();
   const x = sky ? rnd(70, 610) : rnd(120, 560);
   // sky items float in the upper part of whatever is visible; magic items sit on the grass

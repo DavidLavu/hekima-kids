@@ -42,6 +42,7 @@ function renderAlbum() {
   // treasure pages: visible once the previous collection is complete, teased before
   const tHint = t => {
     if (t.t === "f") return "A new friend visits every morning — finish their quest to keep them!";
+    if (t.t === "l") return "Find every single butterfly and treasure to meet the rarest creature of all…";
     if (t.t === "r") return "Catch 9 stars in one round to find this one!";
     const nt = nextTreasure(t.coll);
     if (!nt || nt.id !== t.id) return "Find the treasures before this one first…";
@@ -50,12 +51,14 @@ function renderAlbum() {
       return "Get even better at “" + MODES[t.topic].label + "” to find this one — grow its flower!";
     return "Practise “" + MODES[t.topic].label + "” to find this one!";
   };
-  const ticon = { sky: "🌙", magic: "🦄", sea: "🦀" };
+  const ticon = { sky: "🌙", magic: "🦄", sea: "🦀", wood: "🌳", dino: "🦕" };
   const teaserFor = { bfly: "Find every butterfly to discover a secret new page…",
                       sky: "Finish the Night Sky page to discover what comes next…",
-                      magic: "Finish the Magic Meadow page — something is waiting by the sea…" };
+                      magic: "Finish the Magic Meadow page — something is waiting by the sea…",
+                      sea: "Finish the Rock Pool page — something is rustling in the woods…",
+                      wood: "Finish the Woodland page — something ROARS from long, long ago…" };
   let th = "";
-  for (const [cid, prev] of [["sky", "bfly"], ["magic", "sky"], ["sea", "magic"]]) {
+  for (const [cid, prev] of [["sky", "bfly"], ["magic", "sky"], ["sea", "magic"], ["wood", "sea"], ["dino", "wood"]]) {
     if (!collComplete(prev)) {
       th += '<h3 class="sect">🔒 ???</h3><p class="note">' + teaserFor[prev] + '</p>';
       break;
@@ -88,6 +91,15 @@ function renderAlbum() {
       return '<div class="card locked" data-t="' + t.id + '">' + anyCardSVG(t.id, true) +
         '<div class="nm">???</div><div class="ct">' + tHint(t) + '</div></div>';
     }).join("") + '</div>';
+  // the legend: one golden card at the very end — the crown on the whole album
+  const lg = TR.t_legend;
+  th += '<h3 class="sect">🏆 The Legend</h3><div class="tgrid">' +
+    (S.caught[lg.id] > 0
+      ? '<div class="card shiny" data-t="' + lg.id + '">' + anyCardSVG(lg.id) +
+        '<div class="badge">🏆 LEGEND</div><div class="nm">' + lg.name + '</div><div class="ct">found everything!</div></div>'
+      : '<div class="card locked" data-t="' + lg.id + '">' + anyCardSVG(lg.id, true) +
+        '<div class="nm">???</div><div class="ct">Find every single butterfly and treasure to meet the rarest creature of all…</div></div>') +
+    '</div>';
   $("treasureSects").innerHTML = th;
   document.querySelectorAll("#treasureSects .card").forEach(c => {
     c.onclick = () => {
