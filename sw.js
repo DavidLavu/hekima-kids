@@ -1,6 +1,6 @@
 // Butterfly Maths — offline cache. Serves the saved copy instantly,
 // refreshes it in the background whenever the network is available.
-const CACHE = "hk-v7";
+const CACHE = "hk-v8";
 const FILES = [
   "./", "./index.html", "./icon.png", "./css/style.css",
   "./js/core.js", "./js/audio.js", "./js/collectibles.js", "./js/quest.js",

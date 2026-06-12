@@ -197,10 +197,10 @@ function renderGrown() {
 }
 // the gate question rotates and stays beyond Year 2 reach — she is learning her
 // tables fast, so plain table facts would not keep little fingers out for long
-// pitched for a grown-up: a real carry, no doubling tricks — but still a
-// few-seconds mental sum, not a party piece
-const GATE_QS = [["17 × 6", 102], ["19 × 7", 133], ["23 × 7", 161], ["27 × 4", 108],
-                 ["18 × 7", 126], ["26 × 3", 78], ["29 × 4", 116], ["16 × 8", 128]];
+// single-digit facts, but only the awkward corner of the grid — never the
+// 2/3/5/10 tables a Year 2 child rattles off
+const GATE_QS = [["6 × 7", 42], ["7 × 8", 56], ["6 × 8", 48], ["7 × 9", 63],
+                 ["8 × 9", 72], ["6 × 9", 54], ["7 × 7", 49], ["8 × 8", 64], ["9 × 9", 81]];
 let gateAns = 56;
 $("grownLink").onclick = () => {
   pauseRound(); // hush the question voice and hold the round
